@@ -243,20 +243,25 @@ visibility: hidden}")),
               br(),
 
               # Evolución de casos  ----
-              h3("Evolución de casos de Covid-19"),
-              p("En el presente gráfico se observa la evolución de los casos de contagios por Coronavirus Covid-19 confirmados por exámenes de laboratorio y notificados por el sistema de vigilancia epidemiológica EPIVIGILA del Ministerio de Salud."),
-              girafeOutput("g_total_int", width = "100%", height = "100%") %>%
+              h3("Evolución de casos activos de Covid-19"),
+              p("En el presente gráfico se observa la evolución de los casos de contagios 
+                por Coronavirus confirmados por exámenes de laboratorio y notificados por 
+                el sistema de vigilancia epidemiológica EPIVIGILA del Ministerio de Salud. Esta corresponde a la famosa curva de contagios,
+                que considera sólo a las personas activamente afectadas por el virus, y que debería disminuir a medida que la pandemia disminuya."),
+              # girafeOutput("g_total_int", width = "100%", height = "100%") %>%
+              #   withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              girafeOutput("casos_activos_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
-              div(align = "right", downloadButton("g_total_xlsx", "Descargar datos", class="descargar")),
+              div(align = "right", downloadButton("casos_activos_total_xlsx", "Descargar datos", class="descargar")),
               br(),
 
 
               # Casos nuevos ----
               h3("Casos nuevos de Covid-19"),
               p("Este gráfico indica la cantidad de casos nuevos de contagio de Covid-19 en cada comuna de Chile. Para elegir una comuna, selecciónela en el selector de la parte superior."),
-              girafeOutput("g_reg_nuevos_int", width = "100%", height = "100%") %>%
+              girafeOutput("g_total_nuevos_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
-              div(align = "right", downloadButton("g_reg_nuevos_xlsx", "Descargar datos", class="descargar")),
+              div(align = "right", downloadButton("g_total_nuevos_xlsx", "Descargar datos", class="descargar")),
               br(),
 
 
@@ -267,10 +272,18 @@ visibility: hidden}")),
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
               div(align = "right", downloadButton("casos_genero_edad_xlsx", "Descargar datos", class="descargar")),
               br(),
+              
+              #Fallecidos en total ----
+              h3("Personas fallecidas en total por Covid-19"),
+              p("Este gráfico indica la evolución de fallecimientos producidos por Covid-19 a nivel total en el país."),
+              girafeOutput("fallecidos_totales_int", width = "100%", height = "100%") %>%
+                withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("g_fallecidos_total_xlsx", "Descargar datos", class="descargar")),
+              br(),
 
 
-              # Fallecidos ----
-              h3("Casos de personas fallecidas por Covid-19"),
+              # Fallecidos por edad ----
+              h3("Personas fallecidas por Covid-19 según edad"),
               p("El presente gráfico presenta de forma jerarquizada la evolución del número de fallecidos por Coronavirus, y su distribución por rango etario."),
               girafeOutput("g_fallecidos_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
@@ -344,7 +357,9 @@ visibility: hidden}")),
 
               girafeOutput("g_regiones_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("regiones_xlsx", "Descargar datos", class="descargar")),
               br(),
+              
 
 
               # Casos acumulados ----
@@ -353,13 +368,25 @@ visibility: hidden}")),
 
               girafeOutput("g_acumulado_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("regiones_acumulado_xlsx", "Descargar datos", class="descargar")),
               br(),
 
 
               # Regiones tabla ----
               h3("Regiones de Chile con más casos de Covid-19"),
               p("En la siguiente tabla se presenta el ranking de las regiones del país con más casos confirmados de COVID-19, información que se complementa con la tasa de contagios por cada 100 mil habitantes."),
-              formattableOutput("t_casos_top_10_region") %>% withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              formattableOutput("t_casos_top_10_region") %>% 
+                withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("regiones_ranking_xlsx", "Descargar datos", class="descargar")),
+              br(),
+              
+              #Regiones casos nuevos ----
+              h3("Casos nuevos de Covid-19 por región"),
+              p("Seleccione una región en el selector de más arriba para visualizar los casos nuevos de su región de interés."),
+              
+              girafeOutput("g_reg_nuevos_int", width = "100%", height = "100%") %>%
+                withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("regiones_nuevos_xlsx", "Descargar datos", class="descargar")),
               br(),
 
               # Exámenes ----
@@ -367,6 +394,7 @@ visibility: hidden}")),
               p("En el siguiente gráfico se presenta la distribución de Exámenes PCR (Reacción en cadena de la polimerasa) realizados por laboratorios en cada una de las regiones del país."),
               girafeOutput("g_examenes_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("regiones_examenes_xlsx", "Descargar datos", class="descargar")),
               br(),
 
 
@@ -380,7 +408,9 @@ visibility: hidden}")),
               p("Seleccione una región del selector para visualizar su curva de personas fallecidas debido a Covid-19"),
               girafeOutput("g_fallecidos_region_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("regiones_fallecidos_xlsx", "Descargar datos", class="descargar")),
               br(),
+              
 
 
               # Fallecidos por región incremental
@@ -388,6 +418,7 @@ visibility: hidden}")),
               p("Este gráfico indica la evolución de las cantidades de personas fallecidas a través de todas las regiones del país, permitiendo una mirada generalizada del efecto de la pandemia."),
               girafeOutput("fallecidos_region_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("fallecidos_region_inc_xlsx", "Descargar datos", class="descargar")),
               br(),
 
 
@@ -421,14 +452,19 @@ visibility: hidden}")),
                 choices = NULL,
                 selected = NULL
               ),
-              girafeOutput("g_comuna_int", width = "100%", height = "100%") %>%
+              girafeOutput("grafico_comunas_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("grafico_comunas_xlsx", "Descargar datos", class="descargar")),
               br(),
 
+              
+              
               # Tabla comunas con más casos ----
               h3("Lista de comunas de Chile con más casos de Covid-19"),
               p("En la siguiente tabla se presenta el ranking de las 15 comunas del país con más casos confirmados de COVID-19, información que se complementa con la tasa de contagios por cada 100 mil habitantes, que permite observar la proporción de contagios con respecto a su población. "),
-              formattableOutput("t_casos_top_comuna") %>% withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              formattableOutput("t_casos_top_comuna") %>% 
+                withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("comunas_ranking_xlsx", "Descargar datos", class="descargar")),
               br(),
 
 
@@ -459,7 +495,11 @@ visibility: hidden}")),
               ),
               girafeOutput("nuevos_comuna_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("covid_nuevos_comuna_xlsx", "Descargar datos", class="descargar")),
               br(),
+              
+              
+              
               
               # Tabla comunas con más casos nuevos por semana ----
               h3("Lista de comunas de Chile con más casos nuevos por semana"), #15
@@ -467,9 +507,13 @@ visibility: hidden}")),
                 que han presentado una mayor cantidad de casos nuevos casos confirmados de COVID-19, 
                 de acuerdo a los datos semanales entregados por los informes de epidemiología del Ministerio de Salud. Estos
                 datos se van actualizando retroactivamente a medida que evoluciona la investigación epidemiológica."),
-              formattableOutput("tabla_nuevos_comuna") %>% withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              formattableOutput("tabla_nuevos_comuna") %>% 
+                withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("comunas_nuevos_ranking_xlsx", "Descargar datos", class="descargar")),
               br(),
 
+              
+              
               
               # Tabla comunas aumento ----
               h3("Lista de comunas de Chile con mayor aumento de casos"),
@@ -478,7 +522,6 @@ visibility: hidden}")),
               br(),
               textOutput("casos_totales_comuna_informes"),
               br(),
-              
               # (selector region)
               strong("Elija una región:"),
               selectInput("selector_tabla_comunas_aumento",
@@ -487,10 +530,13 @@ visibility: hidden}")),
                           choices = NULL,
                           selected = NULL
               ),
-              formattableOutput("tabla_comunas_aumento") %>% withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              formattableOutput("tabla_comunas_aumento") %>% 
+                withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("comunas_aumento_ranking_xlsx", "Descargar datos", class="descargar")),
               br(),
 
 
+              
               # Casos activos por comuna ----
               h3("Casos activos de Covid-19 por comuna"), # 19
               p("Elie una región y luego una comuna para visualizar la evolución de la curva de casos
@@ -514,7 +560,11 @@ visibility: hidden}")),
               ),
               girafeOutput("activos_comuna_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("casos_activos_comuna_xlsx", "Descargar datos", class="descargar")),
               br(),
+              
+              
+              
               
               
               # Tabla comunas con más casos activos ----
@@ -523,7 +573,9 @@ visibility: hidden}")),
               de personas que son capaces de contagiar el Covid-19 según los resultados de investigación
               epidemiológica del Ministerio de Salud. 
                Los casos de Covid-19 se consideran activos durante los primeros 14 días después de la fecha de inicio de sus síntomas clínicos."),
-              formattableOutput("tabla_casos_activos_comuna") %>% withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              formattableOutput("tabla_casos_activos_comuna") %>% 
+                withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("comunas_activos_tabla_xlsx", "Descargar datos", class="descargar")),
               br(),
               
               
@@ -540,23 +592,34 @@ visibility: hidden}")),
                 choices = NULL,
                 selected = NULL
               ),
-              girafeOutput("g_comuna_tasa_int", width = "100%", height = "100%") %>%
+              girafeOutput("rank_casos_tasa_comuna_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("rank_casos_tasa_comuna_xlsx", "Descargar datos", class="descargar")),
               br(),
 
-              # Comunas con mas contagios ----
+              
+              
+              
+              
+          
+              # Ranking comunas con mas casos ----
               h3("Comunas de Chile con mayor cantidad de casos de Covid-19"),
               p("El siguiente gráfico ordena las 10 comunas del país con mayor cantidad casos confirmados, e indica también las tasas de incidencia del virus."),
-              girafeOutput("g_comuna_casos_ranking_int", width = "100%", height = "100%") %>%
+              girafeOutput("rank_casos_comuna_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("rank_casos_comuna_xlsx", "Descargar datos", class="descargar")),
               br(),
 
 
+              
+              
+              
               # Comunas con mayor tasa ----
               h3("Comunas de Chile con mayor tasa de incidencia por Covid-19"),
               p("En el presente gráfico se presenta un ranking de las 10 comunas con mayor tasa de incidencia a nivel nacional. La tasa de incidencia (contagios por cada 100 mil habitantes) permite medir el impacto del virus de forma proporcional con respecto a sus poblaciones."),
-              girafeOutput("g_comuna_tasa_ranking_int", width = "100%", height = "100%") %>%
+              girafeOutput("comuna_tasa_ranking_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("comuna_tasa_ranking_xlsx", "Descargar datos", class="descargar")),
               br(),
               # br(),
 
@@ -581,7 +644,9 @@ visibility: hidden}")),
                 reportados por la Unidad de Gestión de Camas Críticas del Ministerio de Salud."),
               girafeOutput("hosp_integrado_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("hosp_integrado_xlsx", "Descargar datos", class="descargar")),
               br(),
+              
 
               # Hospitalizados por edad y género ----
               h3("Hospitalizados totales por grupo de edad y género"),
@@ -590,21 +655,25 @@ visibility: hidden}")),
                 del Covid-19 en la población."),
               girafeOutput("hosp_edad_total_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("hosp_edad_total_xlsx", "Descargar datos", class="descargar")),
               br(),
-
+              
 
               # Pacientes UCI por grupo de edad ----
               h3("Pacientes UCI por grupo de edad"), # 9
               p("El siguiente gráfico desagrega por gruops de edad la evolución de pacientes en Unidad de Cuidados Intensivos (UCI)."),
               girafeOutput("uci_edad_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("uci_edad_xlsx", "Descargar datos", class="descargar")),
               br(),
+              
 
               # Pacientes criticos ----
               h3("Pacientes críticos debido a Covid-19"), # 23
               p("A continuación se expone la evolución de pacientes en condición crítica producida por Covid-19 a nivel nacional."),
               girafeOutput("pacientes_criticos_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("pacientes_criticos_xlsx", "Descargar datos", class="descargar")),
               br(),
 
 
@@ -614,7 +683,9 @@ visibility: hidden}")),
                 Esta información entrega un indicador sobre la evolución de la capacidad de respuesta clínica que tiene el país ante la pandemia."),
               girafeOutput("ventiladores_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("ventiladores_xlsx", "Descargar datos", class="descargar")),
               br(),
+              
 
               # Hospitalizados UCI por grupo de edad ----
               h3("Hospitalizados UCI por grupo de edad"), # 22
@@ -622,6 +693,7 @@ visibility: hidden}")),
                 indicando los cohortes de edad que actualmente se ven afectados de forma más grave a nivel nacional."),
               girafeOutput("hosp_edad_uci_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              div(align = "right", downloadButton("hosp_edad_uci_xlsx", "Descargar datos", class="descargar")),
               br(),
 
 
