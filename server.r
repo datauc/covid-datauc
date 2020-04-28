@@ -4197,7 +4197,7 @@ shinyServer(function(input, output, session) {
   valor_mapa_pais <- reactive({ as.character(input$valor_mapa_pais) })
   
   mapa_activos_pais_datos <- reactive({
-    region_a <- comuna_a %>%
+    region_a <- activos_comuna() %>%
       filter(fecha==max(fecha)) %>%
       group_by(region, codigo_region, fecha) %>%
       summarise(casos=sum(casos),
@@ -4225,7 +4225,7 @@ shinyServer(function(input, output, session) {
           distinct()
       ) %>% 
       left_join(mapa_activos_pais_datos()) %>%
-      mutate(nombre_region = str_wrap(nombre_region,width = 20)) %>%
+      mutate(nombre_region = stringr::str_wrap(nombre_region,width = 20)) %>%
       #graficar
       ggplot(aes(geometry=geometry,
                  fill = casos)) +

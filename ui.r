@@ -703,9 +703,9 @@ visibility: hidden}")),
             
             # — ----
             
-            # Pestaña 5: Mapas ----
+            # Pestaña 5: Análisis ----
             tabPanel(
-              "Mapas",
+              "Análisis",
               br(),
               #Mapa regiones por comuna ----
               h3("Mapa de casos activos por comunas"),
