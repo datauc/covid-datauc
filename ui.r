@@ -700,6 +700,57 @@ visibility: hidden}")),
               ### síntomas declarados (18)
             ),
 
+            
+            # — ----
+            
+            # Pestaña 5: Mapas ----
+            tabPanel(
+              "Mapas",
+              br(),
+              #Mapa regiones por comuna ----
+              h3("Mapa de casos activos por comunas"),
+              p("Seleccione una región para obtener un mapa de calor de los casos activos de Covid-19 en cada una de sus comunas, 
+                donde la intensidad del color indica la cantidad o tasa de casos activos."),
+              p("Toque o pase el cursor sobre las comunas para ver sus nombres y cantidad de casos activos"),
+              strong("Elija una región para graficar el mapa:"),
+              selectInput("selector_region_mapa_comuna",
+                          width = "70%",
+                          label = NULL,
+                          choices = NULL,
+                          selected = NULL
+              ),
+              p("Utilice los botones para elegir si graficar los casos activos o la tasa de casos por cada 100 mil habitantes 
+                (que permite una mejor comparación entre regiones ya que se ajusta a las diferencias de población)."),
+              radioButtons("valor_mapa_regiones", "Cifra para graficar:",
+                           choiceNames = c("Casos activos por comuna",
+                                           "Tasa de activos por cada 100 mil habitantes"),
+                           choiceValues = c("casos", 
+                                            "tasa"),
+                           selected = c("Casos activos por comuna" = "casos")),
+              
+              girafeOutput("mapa_activos_comuna_int", width = "100%", height = "100%") %>%
+                withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              br(),
+              
+              #Mapa país ----
+              h3("Mapa nacional de casos activos"),
+              p("El siguiente mapa presenta la totalidad edl territorio nacional según sus casos de Covid-19. 
+                Los botones que están a continuación le permiten graficar casos activos de Covid-19 por región, o bien la tasa de casos activos por cada 100 mil habitantes."),
+              radioButtons("valor_mapa_pais", "Cifra para graficar:",
+                           choiceNames = c("Casos activos por comuna",
+                                           "Tasa de activos por cada 100 mil habitantes"),
+                           choiceValues = c("casos", 
+                                            "tasa"),
+                           #selected = c("Casos activos por comuna" = "casos")),
+                           selected = c("Tasa de activos por cada 100 mil habitantes" = "tasa")),
+              girafeOutput("mapa_activos_pais_int", width = "100%", height = "100%") %>%
+                withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              br(),
+              
+              
+              
+              
+            ),
             # — ----
 
             # Pestaña 5: Notas ----

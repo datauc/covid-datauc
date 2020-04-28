@@ -4092,10 +4092,203 @@ shinyServer(function(input, output, session) {
   )
   
   
+  #— ----
+  #MAPAS ----
+  
+  #Mapa regiones por comunas ----
+  # selector región
+  observe({
+    updateSelectInput(session, "selector_region_mapa_comuna",
+                      choices = levels(as.factor(activos_comuna()$region)),
+                      selected = "Metropolitana"
+    )
+  })
+  
+  # resultado de selector región
+  region_mapa_comuna_elegida <- reactive({ as.character(input$selector_region_mapa_comuna) })
+  
+  #resultado de cifra por graficar
+  valor_mapa_regiones <- reactive({ as.character(input$valor_mapa_regiones) })
   
   
   
+  #obtener casos activos de comunas
+  mapa_activos_comuna_datos <-  reactive({
+    
+    comunas_casos <- activos_comuna() %>%
+      filter(region == region_mapa_comuna_elegida() ) %>% #desde el selector
+      filter(fecha==max(fecha)) %>%
+      select(codigo_comuna, poblacion, fecha, casos)
+    
+    if(valor_mapa_regiones()=="tasa") {
+      comunas_casos <- comunas_casos %>%
+        mutate(casos = round((casos / poblacion) * 100000, digits = 1))
+    }
+    comunas_casos
+  })
   
   
+  
+  #graficar
+  mapa_activos_comuna_g <- reactive({
+    #Producir mapa
+    mapa1 <- chilemapas::mapa_comunas %>% 
+      left_join(
+        chilemapas::codigos_territoriales %>% 
+          select(matches("comuna"))
+      ) %>% 
+      left_join(mapa_activos_comuna_datos()) %>% #anexar casos
+      filter(!is.na(casos)) %>%
+      #graficar
+      ggplot(aes(geometry=geometry,
+                 fill = casos )) + 
+      #geom_sf(col="white") + 
+      geom_sf_interactive(col="white",
+                          aes(tooltip = paste(nombre_comuna,
+                                              "\n",
+                                              casos,
+                                              ifelse(valor_mapa_regiones()=="casos",
+                                                     "casos activos\nal",
+                                                     "casos activos por 100 mil habitantes\nal" ),
+                                              format(fecha, "%d de %B")))) +
+      scale_fill_gradient(high = "#DF1A57",
+                          #mid = "#5933cc",
+                          #low = "#ded6f5",
+                          low = "#f9d2de",
+                          na.value = "grey80") +
+      coord_sf(expand = FALSE) +
+      tema_lineas +
+      theme(legend.position = "none",
+            axis.text.x = element_blank(),
+            axis.text.y = element_blank()) +
+      labs(subtitle = paste(ifelse(region_elegida() == "Metropolitana",
+                                   paste("Región Metropolitana"),
+                                   ifelse(region_elegida() == "Total",
+                                          paste("Datos a nivel nacional"),
+                                          paste("Región de", region_elegida()) ) ),
+      "\n", format(max(activos_comuna()$fecha), "%d de %B") ),
+      caption = "Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
+    
+    
+    
+  })
+  
+  # Out ----
+  output$mapa_activos_comuna_int <- renderGirafe({
+    girafe(
+      ggobj = mapa_activos_comuna_g(),
+      width_svg = ifelse(dimension_horizontal() < 800, 8, 10), # responsividad horizontal
+      height_svg = 9,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px;"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        #opts_sizing(rescale = TRUE, width = .95),
+        opts_sizing(rescale = FALSE),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
+  
+  
+  #Mapa de Chile ----
+  
+  #resultado de cifra por graficar
+  valor_mapa_pais <- reactive({ as.character(input$valor_mapa_pais) })
+  
+  mapa_activos_pais_datos <- reactive({
+    region_a <- comuna_a %>%
+      filter(fecha==max(fecha)) %>%
+      group_by(region, codigo_region, fecha) %>%
+      summarise(casos=sum(casos),
+                poblacion=sum(poblacion)) %>%
+      ungroup() %>%
+      select(-region) %>%
+      filter(!is.na(codigo_region))
+      
+      if(valor_mapa_pais()=="tasa") {
+        region_a <- region_a %>%
+          mutate(casos = round((casos / poblacion) * 100000, digits = 1))
+      }
+    
+    region_a
+  })
+  
+  
+  mapa_activos_pais_g <- reactive({
+    mapa2 <- chilemapas::mapa_comunas %>% 
+      #producir mapa
+      chilemapas::generar_regiones() %>% 
+      left_join(
+        chilemapas::codigos_territoriales %>% 
+          select(matches("region")) %>% 
+          distinct()
+      ) %>% 
+      left_join(mapa_activos_pais_datos()) %>%
+      mutate(nombre_region = str_wrap(nombre_region,width = 20)) %>%
+      #graficar
+      ggplot(aes(geometry=geometry,
+                 fill = casos)) +
+      #geom_sf(col="white") + 
+      geom_sf_interactive(col="white",
+                          aes(tooltip = paste(nombre_region,
+                                              "\n",
+                                              casos,
+                                              ifelse(valor_mapa_pais()=="casos",
+                                                     "casos activos\nal",
+                                                     "casos activos por cada 100 mil habitantes\nal" ),
+                                              format(fecha, "%d de %B")))) +
+      #nombre regiones
+      geom_sf_text(aes(label=nombre_region),
+                   hjust=1,
+                   nudge_x = -2) +
+      #cifras
+      geom_sf_text(aes(label = paste(casos, 
+                                     ifelse(valor_mapa_pais()=="casos",
+                                            "casos activos",
+                                            "casos activos por cada\n100 mil habitantes") )),
+                   hjust=0,
+                   nudge_x = 2) +
+      scale_fill_gradient(high = "#DF1A57",
+                          #mid = "#5933cc",
+                          #low = "#5933cc",
+                          low = "#f9d2de",
+                          #low="white",
+                          #midpoint=800,
+                          na.value = "grey80") +
+      coord_sf(xlim = c(-80, -60), 
+               #ylim = c(20, 50), 
+               expand = FALSE) +
+      tema_lineas +
+      theme(legend.position = "none",
+            axis.text.x = element_blank(),
+            axis.title.x = element_blank(),
+            axis.text.y = element_blank(),
+            axis.title.y = element_blank(),
+            plot.title = element_blank(),
+            plot.subtitle = element_blank()) +
+      labs(#subtitle = paste(format(max(activos_comuna()$fecha), "%d de %B") ),
+           caption = "Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
+    
+    
+    mapa2
+  })
+  
+  # Out ----
+  output$mapa_activos_pais_int <- renderGirafe({
+    girafe(
+      ggobj = mapa_activos_pais_g(),
+      width_svg = ifelse(dimension_horizontal() < 800, 8, 10), # responsividad horizontal
+      height_svg = 25,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px;"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        #opts_sizing(rescale = TRUE, width = .95),
+        opts_sizing(rescale = FALSE),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
   
 })
