@@ -716,6 +716,12 @@ visibility: hidden}")),
               girafeOutput("grafico_scatter_comuna_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
               br(),
+              br(),
+              
+              
+              girafeOutput("grafico_scatter_pais_int", width = "100%", height = "100%") %>%
+                withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              br(),
               
             ),
             
