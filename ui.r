@@ -702,6 +702,22 @@ visibility: hidden}")),
 
             
             # — ----
+            #Pestaña 4,5: Prueba ----
+            tabPanel(
+              "prueba",
+              
+              strong("Elija una región para analizar:"),
+              selectInput("selector_region_scatter",
+                          width = "70%",
+                          label = NULL,
+                          choices = NULL,
+                          selected = NULL
+              ),
+              girafeOutput("grafico_scatter_comuna_int", width = "100%", height = "100%") %>%
+                withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              br(),
+              
+            ),
             
             # Pestaña 5: Análisis ----
             tabPanel(

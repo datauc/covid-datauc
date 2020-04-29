@@ -19,9 +19,9 @@ shinyServer(function(input, output, session) {
   covid_comuna <- reactive({
     req(covid_region())
     readr::read_csv("http://localhost:8080/casos_totales_comuna_incremental") #%>% # 1
-      # mutate(
-      #   fecha = lubridate::ymd(fecha)
-      # )
+    # mutate(
+    #   fecha = lubridate::ymd(fecha)
+    # )
   })
   
   # Casos totales por comuna ----
@@ -48,18 +48,18 @@ shinyServer(function(input, output, session) {
   covid_region_nuevos <- reactive({
     #req(covid_region())
     readr::read_csv("http://localhost:8080/casos_nuevos_region_incremental") #%>% # 13
-      # mutate(
-      #   fecha = lubridate::ymd(fecha)
-      # )
+    # mutate(
+    #   fecha = lubridate::ymd(fecha)
+    # )
   })
   
   # Hospitalizados UCI ----
   
   covid_hospitalizados <- reactive({
     readr::read_csv("http://localhost:8080/pacientes_uci_region") #%>% # 8
-      # mutate(
-      #   fecha = lubridate::ymd(fecha)
-      # )
+    # mutate(
+    #   fecha = lubridate::ymd(fecha)
+    # )
   })
   
   # Pacientes hospitalizados según cama ----
@@ -73,18 +73,18 @@ shinyServer(function(input, output, session) {
   
   covid_fallecidos <- reactive({
     readr::read_csv("http://localhost:8080/fallecidos_grupo_edad") #%>% # 10
-      # mutate(
-      #   fecha = lubridate::ymd(fecha)
-      # )
+    # mutate(
+    #   fecha = lubridate::ymd(fecha)
+    # )
   })
   
   # Fallecidos por región ----
   
   covid_fallecidos_region <- reactive({
     readr::read_csv("http://localhost:8080/fallecidos_region_incremental") #%>% # 14
-      # mutate(
-      #   fecha = lubridate::ymd(fecha)
-      # )
+    # mutate(
+    #   fecha = lubridate::ymd(fecha)
+    # )
   })
   
   # Fallecidos por región incremental ----
@@ -97,9 +97,9 @@ shinyServer(function(input, output, session) {
   
   covid_examenes <- reactive({
     readr::read_csv("http://localhost:8080/examenes_pcr_region") #%>% # 7
-      # mutate(
-      #   fecha = lubridate::ymd(fecha)
-      # )
+    # mutate(
+    #   fecha = lubridate::ymd(fecha)
+    # )
   })
   
   # Datos pacientes criticos ----
@@ -150,9 +150,9 @@ shinyServer(function(input, output, session) {
   
   covid_totales <- reactive({
     readr::read_csv("http://localhost:8080/totales_nacionales_diarios") #%>% # 5
-      # mutate(
-      #   fecha = lubridate::ymd(fecha)
-      # )
+    # mutate(
+    #   fecha = lubridate::ymd(fecha)
+    # )
   })
   
   
@@ -829,9 +829,9 @@ shinyServer(function(input, output, session) {
     fecha_anterior2 <- max(fecha_anterior$fecha)
     
     fechas <- paste("Aumentos entre el",
-          format(lubridate::ymd(fecha_anterior2), "%d de %B"),
-          "y el",
-          format(lubridate::ymd(fecha_maxima), "%d de %B")
+                    format(lubridate::ymd(fecha_anterior2), "%d de %B"),
+                    "y el",
+                    format(lubridate::ymd(fecha_maxima), "%d de %B")
     )
     
     fechas
@@ -2637,7 +2637,7 @@ shinyServer(function(input, output, session) {
   
   
   
-
+  
   
   
   
@@ -2740,7 +2740,7 @@ shinyServer(function(input, output, session) {
       ggplot(aes(fecha, casos,
                  col = forcats::fct_reorder(categoria, final),
                  fill = forcats::fct_reorder(categoria, final)
-                 )) +
+      )) +
       geom_line(size = 2, alpha = 0.4) +
       geom_point_interactive(aes(
         tooltip = stringr::str_wrap(
@@ -2756,10 +2756,10 @@ shinyServer(function(input, output, session) {
                               casos,
                               ""),
                        "")),
-      col = "#DF1A57", size = 4,
-      family = "Open Sans",
-      hjust = 1, vjust = -1.4,
-      show.legend = FALSE) +
+        col = "#DF1A57", size = 4,
+        family = "Open Sans",
+        hjust = 1, vjust = -1.4,
+        show.legend = FALSE) +
       geom_text_repel(aes(
         x = max(fecha), y = casos,
         label = ifelse(fecha == max(fecha),
@@ -3396,7 +3396,7 @@ shinyServer(function(input, output, session) {
   })
   
   
- 
+  
   
   
   
@@ -4166,8 +4166,8 @@ shinyServer(function(input, output, session) {
                                    ifelse(region_elegida() == "Total",
                                           paste("Datos a nivel nacional"),
                                           paste("Región de", region_elegida()) ) ),
-      "\n", format(max(activos_comuna()$fecha), "%d de %B") ),
-      caption = "Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
+                            "\n", format(max(activos_comuna()$fecha), "%d de %B") ),
+           caption = "Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
     
     
     
@@ -4205,11 +4205,11 @@ shinyServer(function(input, output, session) {
       ungroup() %>%
       select(-region) %>%
       filter(!is.na(codigo_region))
-      
-      if(valor_mapa_pais()=="tasa") {
-        region_a <- region_a %>%
-          mutate(casos = round((casos / poblacion) * 100000, digits = 1))
-      }
+    
+    if(valor_mapa_pais()=="tasa") {
+      region_a <- region_a %>%
+        mutate(casos = round((casos / poblacion) * 100000, digits = 1))
+    }
     
     region_a
   })
@@ -4268,7 +4268,7 @@ shinyServer(function(input, output, session) {
             plot.title = element_blank(),
             plot.subtitle = element_blank()) +
       labs(#subtitle = paste(format(max(activos_comuna()$fecha), "%d de %B") ),
-           caption = "Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
+        caption = "Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
     
     
     mapa2
@@ -4291,4 +4291,157 @@ shinyServer(function(input, output, session) {
     )
   })
   
+  
+  # Scatterplot regiones ----
+  
+  
+  observe({
+    updateSelectInput(session, "selector_region_scatter",
+                      choices = levels(as.factor(activos_comuna()$region)),
+                      selected = "Metropolitana"
+    )
+  })
+  
+  selector_region_scatter_elegida <- reactive({ as.character(input$selector_region_scatter)
+  })
+  
+  comuna_nuevos_scatter <- reactive({
+    
+    #Obtener casos nuevos restando último día al anterior
+    comuna_nuevos <- activos_comuna() %>%
+      #filter(region=="Metropolitana") %>%
+      filter(comuna!="Total") %>%
+      group_by(comuna) %>%
+      #calcular casos nuevos al restar con casos del día anterior
+      mutate(casos_lag = lag(casos),
+             casos_nuevos = casos-casos_lag) %>%
+      mutate(casos_nuevos = replace(casos_nuevos, casos_nuevos < 0, 0), #casos negativos =0
+             casos_nuevos = replace(casos_nuevos, is.na(casos_nuevos), 0)) %>% #nuevos missing = 0
+      ungroup() %>%
+      select(codigo_comuna, comuna, fecha, casos, casos_lag, casos_nuevos) %>%
+      filter(fecha == max(fecha)) %>%
+      select(codigo_comuna, casos_nuevos, casos_lag)
+    
+  })
+  
+  datos_scatter_comuna <- reactive({
+    
+    load(file="superficies_comunas.rdata")
+    
+    datos <- activos_comuna() %>%
+      filter(fecha==max(fecha)) %>%
+      #filter(region=="Valparaiso") %>%
+      #filter(region=="Metropolitana") %>%
+      #filter(region=="Los Rios") %>%
+      #filter(region=="La Araucania") %>%
+      #filter(region=="Los Lagos") %>%
+      filter(region == selector_region_scatter_elegida() ) %>%
+      filter(comuna!="Total") %>%
+      mutate(prevalencia = round((casos / poblacion) * 100000, digits = 1)) %>% #prevalencia
+      left_join(comuna_nuevos_scatter() ) %>% #adjuntar casos nuevos
+      mutate(tasa = casos_nuevos/casos_lag) %>% #tasa de contagio
+      left_join(superficie_comunas) %>% #adjuntar superficies
+      mutate(densidad = casos/superficie) #densidad de casos
+    
+    datos
+    
+  })
+  
+  grafico_scatter_comuna <- reactive({
+    
+    scatterplot <- datos_scatter_comuna() %>%
+      #mutate(comuna = paste("  ", comuna, "  ")) %>%
+      ggplot(aes(x = prevalencia,
+                 y = tasa,
+                 size = casos,
+                 col = densidad)) +
+      geom_point_interactive(aes(tooltip = paste(comuna,
+                                                 "\nCasos activos:", casos, "casos",
+                                                 #"\nTasa de contagios diarios:", scales::percent_format(tasa, accuracy=1), "de aumento diario", #y
+                                                 "\nTasa de contagios diarios:", round(tasa, digits=2), "% de aumento diario", #y
+                                                 "\nTasa de prevalencia:", round(prevalencia, digits=2), "activos por cada 100 mil habitantes", #x
+                                                 "\nCasos según superficie de la comuna:", round(densidad, digits=2), "casos por km2" ) 
+      ) ) +
+      geom_point(shape = 1, colour = "black", alpha=0.3) +
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                         expand = expansion(mult=c(0.15,0)) ) + #condicional: sólo si hay casos con tasa mayor a 0.0, si no hay, dejae expand en c(0, 0)
+      scale_size(range = c(0.5, 12),
+                 breaks = c(1, 
+                            round(max(datos_scatter_comuna()$casos)/3, digits = 0),
+                            round(max(datos_scatter_comuna()$casos), digits = 0) )) + #la comuna con más casos
+      scale_color_gradient2(low = "#5cd65c",
+                            mid = "#e0e01a",
+                            high = "#e01a1a",
+                            midpoint = max(datos_scatter_comuna()$densidad)/2.5,
+                            limits = c(0, 
+                                       max(datos_scatter_comuna()$densidad)),
+                            breaks = c(0, 
+                                       max(datos_scatter_comuna()$densidad)/2,
+                                       max(datos_scatter_comuna()$densidad) 
+                            ),
+                            labels = function(x) paste(round(x, digits=3), "casos\npor km2") ) +
+      geom_text_repel(aes(label = ifelse(prevalencia>50 | tasa>0.5 | casos/sum(casos)> 0.05 | poblacion/sum(poblacion)>0.1,
+                                         comuna,
+                                         "")),
+                      point.padding = unit(0.8, "lines"),
+                      box.padding = unit(0, "lines"),
+                      min.segment.length = unit(1, "lines"),
+                      force=15,
+                      max.iter=40000,
+                      size=3.2, color="black", segment.alpha = 0.3) +
+      coord_cartesian(clip="off") +
+      scale_x_continuous(expand = expansion(mult=c(0,0)) ) +
+      theme(axis.ticks = element_blank(), 
+            legend.key = element_blank(),
+            legend.text = element_text(size=11),
+            legend.background = element_blank(),
+            legend.title = element_text(size=15, margin=margin(t=30, b=15)),
+            panel.background = element_rect(colour = "gray95", fill=NA, size=0.5) ) +
+      theme(legend.box.margin = margin(c(0,0,0,10))) +
+      theme(axis.title.x = element_text(size=15, margin=margin(b=10)),
+            axis.text.y = element_text(size=13, margin=margin(l=10)),
+            axis.title.y = element_text(size=15),
+            axis.text.x = element_text(size=13, margin=margin(t=5, b=10)) ) +
+      theme(panel.grid.major.x = element_line(color="gray95", linetype="solid")) +
+      theme(panel.grid.major.y = element_line(color="gray95", linetype="solid")) +
+      theme(plot.subtitle = element_text(size = 18, family = "Open Sans", color = "#891036", margin = margin(b = 15)),
+            plot.caption = element_text(size = 10, hjust=1, family = "Open Sans"),
+            plot.caption.position = "plot",
+            text = element_text(family = "Open Sans")) +
+      guides(size = guide_legend(override.aes = list(col = "#e01a1a"))) +
+      labs(subtitle = paste(
+        ifelse(selector_region_scatter_elegida() == "Metropolitana",
+               paste("Región Metropolitana"),
+               paste("Región de", selector_region_scatter_elegida())
+        ), "\n"),
+        x="Tasa de prevalencia\n(casos activos por cada 100.000 habitantes)",
+        y="Tasa de contagios diarios\n(proporción de casos nuevos respecto a los activos del día anterior)",
+        size="Casos activos\nde Covid-19",
+        col="Casos según\nsuperficie",
+        caption = "Fuente: Análisis basado en modelo SIR adaptado por los profesores\nDuvan Henao y Gregorio Moreno, de la Facultad de Matemáticas UC.\nDatos: Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
+    
+        scatterplot
+        
+  })
+    
+    
+    # Out ----
+    output$grafico_scatter_comuna_int <- renderGirafe({
+      girafe(
+        ggobj = grafico_scatter_comuna(),
+        # width_svg = 8,
+        width_svg = ifelse(dimension_horizontal() < 800, 8, 10), # responsividad horizontal
+        height_svg = 8,
+        options = list(
+          opts_tooltip(use_fill = TRUE),
+          opts_hover(css = "r: 8px"),
+          opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+          opts_sizing(rescale = TRUE, width = .95),
+          opts_toolbar(position = "topright", saveaspng = FALSE)
+        )
+      )
+    })
+    
+    
 })
+  
