@@ -4294,11 +4294,13 @@ shinyServer(function(input, output, session) {
   
   # Scatterplot regiones ----
   
+  load(file="superficies_comunas.rdata")
+  
   #Selector de regiones
   observe({
     updateSelectInput(session, "selector_region_scatter",
-                      choices = levels(as.factor(activos_comuna()$region)),
-                      selected = "Metropolitana"
+                      choices = levels(as.factor(superficies_comunas$region)),
+                      selected = "Metropolitana de Santiago"
     )
   })
   
@@ -4306,47 +4308,58 @@ shinyServer(function(input, output, session) {
   selector_region_scatter_elegida <- reactive({ as.character(input$selector_region_scatter)
   })
   
-  #Procesar datos de casos nuevos
+  #Procesar tasa diariaequivalente
   comuna_nuevos_scatter <- reactive({
     
-    #Obtener casos nuevos restando último día al anterior
-    comuna_nuevos <- activos_comuna() %>%
-      #filter(region=="Metropolitana") %>%
-      filter(comuna!="Total") %>%
-      group_by(comuna) %>%
-      #calcular casos nuevos al restar con casos del día anterior
-      mutate(casos_lag = lag(casos),
-             casos_nuevos = casos-casos_lag) %>%
-      mutate(casos_nuevos = replace(casos_nuevos, casos_nuevos < 0, 0), #casos negativos =0
-             casos_nuevos = replace(casos_nuevos, is.na(casos_nuevos), 0)) %>% #nuevos missing = 0
-      ungroup() %>%
-      select(codigo_comuna, comuna, fecha, casos, casos_lag, casos_nuevos) %>%
-      filter(fecha == max(fecha)) %>%
-      select(codigo_comuna, casos_nuevos, casos_lag)
+    comuna_t2 <- casos_totales_comuna() %>%
+      rename(totales = casos_confirmados) %>%
+      select(codigo_comuna, fecha, totales)
     
-  })
+    #unir totales con activos
+    comuna_a_t <- activos_comuna() %>%
+      rename(activos=casos) %>%
+      left_join(comuna_t2)
+    
+    #Elegir fecha1 y fecha2
+    fecha_1 <- "2020-04-20" #primera fecha
+    fecha_2 <- "2020-04-27" #7 días después
+    
+    # * Calcular
+    #(1+(Totales1 − Totales2) ÷ Activos )^(1÷7)−1
+    tasa_diaria_equivalente <- comuna_a_t %>%
+      filter(comuna!="Total") %>%
+      filter(fecha==fecha_1 | fecha==fecha_2) %>% #filtrar 2 fechas
+      mutate(t = case_when(fecha==fecha_2 ~ 2,
+                           fecha==fecha_1 ~ 1)) %>% #crear t1 y t2
+      group_by(comuna) %>%
+      mutate(totales1 = totales[t==1],
+             totales2 = totales[t==2]) %>% #separar cifras por fecha en columnas
+      mutate(activos1 = activos[t==1]) %>%
+      #cálculo
+      mutate(tasa_diaria = (1 + (totales2 - totales1) / activos1) ^ (1/7) - 1 ) %>%
+      mutate(tasa_diaria = replace(tasa_diaria, 
+                                   is.na(tasa_diaria),
+                                   0)) %>% #reemplazar missing
+      ungroup() %>%
+      filter(fecha == max(fecha)) %>% #quedar con una fila
+      select(-t, -totales1, -totales2, -activos1, -comuna, -region)
+    
+    #output
+    tasa_diaria_equivalente
+  }) #comuna_nuevos_scatter()
+  
   
   #Unir datos de casos nuevos con superficie y región elegida
   datos_scatter_comuna <- reactive({
     
-    load(file="superficies_comunas.rdata")
-    
-    datos <- activos_comuna() %>%
-      filter(fecha==max(fecha)) %>%
-      #filter(region=="Valparaiso") %>%
-      #filter(region=="Metropolitana") %>%
-      #filter(region=="Los Rios") %>%
-      #filter(region=="La Araucania") %>%
-      #filter(region=="Los Lagos") %>%
-      filter(region == selector_region_scatter_elegida() ) %>%
-      filter(comuna!="Total") %>%
-      mutate(prevalencia = round((casos / poblacion) * 100000, digits = 1)) %>% #prevalencia
-      left_join(comuna_nuevos_scatter() ) %>% #adjuntar casos nuevos
-      mutate(tasa = casos_nuevos/casos_lag) %>% #tasa de contagio
-      left_join(superficie_comunas) %>% #adjuntar superficies
-      mutate(densidad = casos/superficie) #densidad de casos
+    datos <- comuna_nuevos_scatter() %>%
+      mutate(prevalencia = round((activos / poblacion) * 100000, digits = 1)) %>% #prevalencia
+      left_join(superficies_comunas) %>% #adjuntar superficies
+      mutate(densidad = activos/superficie) %>% #densidad de casos
+      filter(region == selector_region_scatter_elegida() )
     
     datos
+    
     
   })
   
@@ -4356,23 +4369,22 @@ shinyServer(function(input, output, session) {
     scatterplot <- datos_scatter_comuna() %>%
       #mutate(comuna = paste("  ", comuna, "  ")) %>%
       ggplot(aes(x = prevalencia,
-                 y = tasa,
-                 size = casos,
+                 y = tasa_diaria,
+                 size = activos,
                  col = densidad)) +
       geom_point_interactive(aes(tooltip = paste(comuna,
-                                                 "\nCasos activos:", casos, "casos",
+                                                 "\nCasos activos:", activos, "casos",
                                                  #"\nTasa de contagios diarios:", scales::percent_format(tasa, accuracy=1), "de aumento diario", #y
-                                                 "\nTasa de contagios diarios:", round(tasa, digits=2), "% de aumento diario", #y
+                                                 "\nTasa de contagios diarios:", round(tasa_diaria, digits=2), "% de aumento diario", #y
                                                  "\nTasa de prevalencia:", round(prevalencia, digits=2), "activos por cada 100 mil habitantes", #x
                                                  "\nCasos según superficie de la comuna:", round(densidad, digits=2), "casos por km2" ) 
       ) ) +
       geom_point(shape = 1, colour = "black", alpha=0.3) +
-      scale_y_continuous(labels = scales::percent_format(accuracy = 1),
-                         expand = expansion(mult=c(0.15,0)) ) + #condicional: sólo si hay casos con tasa mayor a 0.0, si no hay, dejae expand en c(0, 0)
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1) ) + #condicional: sólo si hay casos con tasa mayor a 0.0, si no hay, dejae expand en c(0, 0)
       scale_size(range = c(0.5, 12),
                  breaks = c(1, 
-                            round(max(datos_scatter_comuna()$casos)/3, digits = 0),
-                            round(max(datos_scatter_comuna()$casos), digits = 0) )) + #la comuna con más casos
+                            round(max(datos_scatter_comuna()$activos)/3, digits = 0),
+                            round(max(datos_scatter_comuna()$activos), digits = 0) )) + #la comuna con más casos
       scale_color_gradient2(low = "#5cd65c",
                             mid = "#e0e01a",
                             high = "#e01a1a",
@@ -4383,8 +4395,8 @@ shinyServer(function(input, output, session) {
                                        max(datos_scatter_comuna()$densidad)/2,
                                        max(datos_scatter_comuna()$densidad) 
                             ),
-                            labels = function(x) paste(round(x, digits=3), "casos\npor km2") ) +
-      geom_text_repel(aes(label = ifelse(prevalencia>50 | tasa>0.5 | casos/sum(casos)> 0.05 | poblacion/sum(poblacion)>0.1,
+                            labels = function(x) paste(format(round(x, digits=2), decimal.mark = ","), "casos\npor km2") ) +
+      geom_text_repel(aes(label = ifelse(prevalencia>50 | tasa_diaria>0.5 | activos/sum(activos)> 0.05 | poblacion/sum(poblacion)>0.1,
                                          comuna,
                                          "")),
                       point.padding = unit(0.8, "lines"),
@@ -4419,7 +4431,7 @@ shinyServer(function(input, output, session) {
                paste("Región de", selector_region_scatter_elegida())
         ), "\n"),
         x="Tasa de prevalencia\n(casos activos por cada 100.000 habitantes)",
-        y="Tasa de contagios diarios\n(proporción de casos nuevos respecto a los activos del día anterior)",
+        y="Tasa de diaria equivalente de contagios\n(proporción de casos nuevos respecto a los activos del día anterior)",
         size="Casos activos\nde Covid-19",
         col="Casos según\nsuperficie",
         caption = "Fuente: Análisis basado en modelo SIR adaptado por los profesores\nDuvan Henao y Gregorio Moreno, de la Facultad de Matemáticas UC.\nDatos: Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
@@ -4450,36 +4462,58 @@ shinyServer(function(input, output, session) {
   #Scatterplot nacional ----
   
   pais_nuevos_scatter <- reactive({
-    regiones_nuevos <- activos_comuna() %>%
-      filter(comuna!="Total") %>%
-      group_by(codigo_region, region, fecha) %>%
-      summarize(casos = sum(casos),
-                poblacion = sum(poblacion)) %>%
-      group_by(region) %>%
-      #calcular casos nuevos al restar con casos del día anterior
-      mutate(casos_lag = lag(casos),
-             casos_nuevos = casos-casos_lag) %>%
-      mutate(casos_nuevos = replace(casos_nuevos, casos_nuevos < 0, 0), #casos negativos =0
-             casos_nuevos = replace(casos_nuevos, is.na(casos_nuevos), 0)) %>% #nuevos missing = 0
-      ungroup() %>%
-      filter(fecha == max(fecha)) %>%
-      select(codigo_region, poblacion, casos, casos_nuevos, casos_lag) %>%
-      na.omit()
+    comuna_t2 <- casos_totales_comuna() %>%
+      rename(totales = casos_confirmados) %>%
+      select(codigo_comuna, fecha, totales)
     
-    regiones_nuevos
+    #unir totales con activos
+    comuna_a_t <- activos_comuna() %>%
+      rename(activos=casos) %>%
+      left_join(comuna_t2)
+    
+    #Elegir fecha1 y fecha2
+    fecha_1 <- "2020-04-20" #primera fecha
+    fecha_2 <- "2020-04-27" #7 días después
+    
+    # * Calcular
+    #(1+(Totales1 − Totales2) ÷ Activos )^(1÷7)−1
+    
+    tasa_diaria_pais_equivalente <- comuna_a_t %>%
+      filter(comuna!="Total") %>%
+      filter(fecha==fecha_1 | fecha==fecha_2) %>% #filtrar 2 fechas
+      group_by(codigo_region, region, fecha) %>%
+      summarize(activos = sum(activos),
+                totales = sum(totales),
+                poblacion = sum(poblacion)) %>%
+      mutate(t = case_when(fecha==fecha_2 ~ 2,
+                           fecha==fecha_1 ~ 1)) %>% #crear t1 y t2
+      group_by(region) %>%
+      mutate(totales1 = totales[t==1],
+             totales2 = totales[t==2]) %>% #separar cifras por fecha en columnas
+      mutate(activos1 = activos[t==1]) %>%
+      #cálculo
+      mutate(tasa_diaria = (1 + (totales2 - totales1) / activos1) ^ (1/7) - 1 ) %>%
+      mutate(tasa_diaria = replace(tasa_diaria, 
+                                   is.na(tasa_diaria),
+                                   0)) %>% #reemplazar missing
+      ungroup() %>%
+      filter(fecha == max(fecha)) %>% #quedar con una fila
+      select(codigo_region, poblacion, fecha, 
+             activos, totales, tasa_diaria)
+    
+    tasa_diaria_pais_equivalente
     
     })
   
+  load(file="superficies_regiones.rdata")
+  
   #Datos de todas las regiones
   datos_scatter_pais_sinrm <- reactive({
-    load(file="superficies_regiones.rdata")
     datos_regiones_sinrm <- pais_nuevos_scatter() %>%
       #filter(region=="Metropolitana") %>%
-      mutate(prevalencia = round((casos / poblacion) * 100000, digits = 1)) %>% #prevalencia
-      mutate(tasa = casos_nuevos/casos_lag) %>% #tasa de contagio
+      mutate(prevalencia = round((activos / poblacion) * 100000, digits = 1)) %>% #prevalencia
       left_join(superficies_regiones) %>% #adjuntar superficies
-      mutate(densidad = casos/superficie) %>% #densidad de casos
-      mutate(tasa = replace(tasa, is.na(tasa), 0)) %>%
+      mutate(densidad = activos/(superficie/100)) %>% #densidad de casos
       filter(region!="Metropolitana de Santiago")
     
     datos_regiones_sinrm
@@ -4489,11 +4523,9 @@ shinyServer(function(input, output, session) {
     datos_regiones_conrm <- reactive({
     datos_regiones_conrm <- pais_nuevos_scatter() %>%
       #filter(region=="Metropolitana") %>%
-      mutate(prevalencia = round((casos / poblacion) * 100000, digits = 1)) %>% #prevalencia
-      mutate(tasa = casos_nuevos/casos_lag) %>% #tasa de contagio
+      mutate(prevalencia = round((activos / poblacion) * 100000, digits = 1)) %>% #prevalencia
       left_join(superficies_regiones) %>% #adjuntar superficies
-      mutate(densidad = casos/superficie) %>% #densidad de casos
-      mutate(tasa = replace(tasa, is.na(tasa), 0)) %>%
+      mutate(densidad = activos/(superficie/100)) %>% #densidad de casos
       filter(region=="Metropolitana de Santiago")
     
     datos_regiones_conrm
@@ -4505,29 +4537,29 @@ shinyServer(function(input, output, session) {
     scatter_pais <- datos_scatter_pais_sinrm() %>%
       mutate(region = stringr::str_wrap(region, 15)) %>%
       ggplot(aes(x = prevalencia,
-                 y = tasa,
-                 size = casos,
+                 y = tasa_diaria,
+                 size = activos,
                  col = densidad)) +
       #geom_point() +
       #Región metropolitana
       geom_point_interactive(data = datos_regiones_conrm(),
                  inherit.aes = FALSE,
                  aes(x = prevalencia,
-                     y = tasa,
+                     y = tasa_diaria,
                      tooltip = (paste(region,
-                                      "\nCasos activos:", casos, "casos",
+                                      "\nCasos activos:", activos, "casos",
                                       #"\nTasa de contagios diarios:", scales::percent_format(tasa, accuracy=1), "de aumento diario", #y
-                                      "\nTasa de contagios diarios:", round(tasa, digits=3), "% de aumento diario", #y
+                                      "\nTasa de contagios diarios:", round(tasa_diaria, digits=3), "% de aumento diario", #y
                                       "\nTasa de prevalencia:", round(prevalencia, digits=3), "activos por cada 100 mil habitantes", #x
                                       "\nCasos según superficie de la comuna:", round(densidad, digits=4), "casos por km2" ))),
-                 size = max(datos_regiones_conrm()$casos) * (15/max(datos_scatter_pais_sinrm()$casos)),
+                 size = max(datos_regiones_conrm()$activos) * (15/max(datos_scatter_pais_sinrm()$activos)),
                  col= "#e01a1a",
                  alpha=0.1,
                  show.legend = FALSE) +
       geom_point_interactive(aes(tooltip = (paste(region,
-                                                 "\nCasos activos:", casos, "casos",
+                                                 "\nCasos activos:", activos, "casos",
                                                  #"\nTasa de contagios diarios:", scales::percent_format(tasa, accuracy=1), "de aumento diario", #y
-                                                 "\nTasa de contagios diarios:", round(tasa, digits=3), "% de aumento diario", #y
+                                                 "\nTasa de contagios diarios:", round(tasa_diaria, digits=3), "% de aumento diario", #y
                                                  "\nTasa de prevalencia:", round(prevalencia, digits=3), "activos por cada 100 mil habitantes", #x
                                                  "\nCasos según superficie de la comuna:", round(densidad, digits=4), "casos por km2" ))
       ) ) +
@@ -4536,7 +4568,7 @@ shinyServer(function(input, output, session) {
       #Texto RM
       geom_text(data = datos_regiones_conrm(),
                 aes(x=prevalencia,
-                    y=tasa*2.5),
+                    y=tasa_diaria*2),
                 label="Región Metropolitana",
                 col= "#e01a1a",
                 alpha=0.3, size=5, hjust=0.5) +
@@ -4555,9 +4587,9 @@ shinyServer(function(input, output, session) {
       scale_size(range = c(0.5, 15),
                  #limits = c(0, 5000),
                  breaks = c(10, 
-                            round(max(datos_scatter_pais_sinrm()$casos), digits = -2)/2,
-                            round(max(datos_scatter_pais_sinrm()$casos), digits = -2) )) + #la comuna con más casos
-      geom_text_repel(aes(label = ifelse(prevalencia>15 | tasa>0.02 | poblacion/sum(poblacion)>0.1,
+                            round(max(datos_scatter_pais_sinrm()$activos), digits = -2)/2,
+                            round(max(datos_scatter_pais_sinrm()$activos), digits = -2) )) + #la comuna con más casos
+      geom_text_repel(aes(label = ifelse(prevalencia>15 | tasa_diaria>0.02 | poblacion/sum(poblacion)>0.1,
                                          region, "") ),
                       #ifelse(region=="O'Higgins", paste0(region, "(", round(tasa*100, digits=1), "%)"),
                       #        region), "")),
@@ -4591,7 +4623,7 @@ shinyServer(function(input, output, session) {
       guides(size = guide_legend(override.aes = list(col = "#e01a1a"))) +
       labs(subtitle = "Datos a nivel nacional",
            x="Tasa de prevalencia\n(casos activos por cada 100.000 habitantes)",
-           y="Tasa de contagios diarios\n(proporción de casos nuevos respecto a los activos del día anterior)",
+           y="Tasa de diaria equivalente de contagios\n(proporción de casos nuevos respecto a los activos del día anterior)",
            size="Casos activos\nde Covid-19",
            col="Casos según\nsuperficie",
            caption = "Fuente: Análisis basado en modelo SIR adaptado por los profesores\nDuvan Henao y Gregorio Moreno, de la Facultad de Matemáticas UC.\nDatos: Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
