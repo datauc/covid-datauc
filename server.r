@@ -285,6 +285,7 @@ shinyServer(function(input, output, session) {
     axis.ticks = element_blank(), panel.background = element_blank(),
     panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(), panel.grid.minor.y = element_blank(),
+    legend.text = element_text(size = 13, margin = margin(r = 20)),
     legend.key.size = unit(1.6, "lines"),
     text = element_text(family = "Open Sans"),
     plot.title.position = "plot",
@@ -4429,35 +4430,35 @@ shinyServer(function(input, output, session) {
         ifelse(selector_region_scatter_elegida() == "Metropolitana",
                paste("Región Metropolitana"),
                paste("Región de", selector_region_scatter_elegida())
-        ), "\n"),
+        ), "\nÚltima actualización:", format(max(datos_scatter_comuna()$fecha), "%d de %B"), "\n"),
         x="Tasa de prevalencia\n(casos activos por cada 100.000 habitantes)",
         y="Tasa de diaria equivalente de contagios\n(proporción de casos nuevos respecto a los activos del día anterior)",
         size="Casos activos\nde Covid-19",
         col="Casos según\nsuperficie",
         caption = "Fuente: Análisis basado en modelo SIR adaptado por los profesores\nDuvan Henao y Gregorio Moreno, de la Facultad de Matemáticas UC.\nDatos: Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
     
-        scatterplot
-        
+    scatterplot
+    
   })
-    
-    
-    # Out ----
-    output$grafico_scatter_comuna_int <- renderGirafe({
-      girafe(
-        ggobj = grafico_scatter_comuna(),
-        # width_svg = 8,
-        width_svg = ifelse(dimension_horizontal() < 800, 8, 10), # responsividad horizontal
-        height_svg = 8,
-        options = list(
-          opts_tooltip(use_fill = TRUE),
-          opts_hover(css = "r: 8px"),
-          opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
-          opts_sizing(rescale = TRUE, width = .95),
-          opts_toolbar(position = "topright", saveaspng = FALSE)
-        )
+  
+  
+  # Out ----
+  output$grafico_scatter_comuna_int <- renderGirafe({
+    girafe(
+      ggobj = grafico_scatter_comuna(),
+      # width_svg = 8,
+      width_svg = ifelse(dimension_horizontal() < 800, 8, 10), # responsividad horizontal
+      height_svg = 8,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        opts_sizing(rescale = TRUE, width = .95),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
       )
-    })
-    
+    )
+  })
+  
   
   #Scatterplot nacional ----
   
@@ -4503,7 +4504,7 @@ shinyServer(function(input, output, session) {
     
     tasa_diaria_pais_equivalente
     
-    })
+  })
   
   load(file="superficies_regiones.rdata")
   
@@ -4520,7 +4521,7 @@ shinyServer(function(input, output, session) {
   })
   
   #Datos solo para la RM
-    datos_regiones_conrm <- reactive({
+  datos_regiones_conrm <- reactive({
     datos_regiones_conrm <- pais_nuevos_scatter() %>%
       #filter(region=="Metropolitana") %>%
       mutate(prevalencia = round((activos / poblacion) * 100000, digits = 1)) %>% #prevalencia
@@ -4529,11 +4530,11 @@ shinyServer(function(input, output, session) {
       filter(region=="Metropolitana de Santiago")
     
     datos_regiones_conrm
-    })
+  })
   
-    #Gráfico ----
+  #Gráfico ----
   grafico_scatter_pais <- reactive({
-  
+    
     scatter_pais <- datos_scatter_pais_sinrm() %>%
       mutate(region = stringr::str_wrap(region, 15)) %>%
       ggplot(aes(x = prevalencia,
@@ -4543,25 +4544,25 @@ shinyServer(function(input, output, session) {
       #geom_point() +
       #Región metropolitana
       geom_point_interactive(data = datos_regiones_conrm(),
-                 inherit.aes = FALSE,
-                 aes(x = prevalencia,
-                     y = tasa_diaria,
-                     tooltip = (paste(region,
-                                      "\nCasos activos:", activos, "casos",
-                                      #"\nTasa de contagios diarios:", scales::percent_format(tasa, accuracy=1), "de aumento diario", #y
-                                      "\nTasa de contagios diarios:", round(tasa_diaria, digits=3), "% de aumento diario", #y
-                                      "\nTasa de prevalencia:", round(prevalencia, digits=3), "activos por cada 100 mil habitantes", #x
-                                      "\nCasos según superficie de la comuna:", round(densidad, digits=4), "casos por km2" ))),
-                 size = max(datos_regiones_conrm()$activos) * (15/max(datos_scatter_pais_sinrm()$activos)),
-                 col= "#e01a1a",
-                 alpha=0.1,
-                 show.legend = FALSE) +
+                             inherit.aes = FALSE,
+                             aes(x = prevalencia,
+                                 y = tasa_diaria,
+                                 tooltip = (paste(region,
+                                                  "\nCasos activos:", activos, "casos",
+                                                  #"\nTasa de contagios diarios:", scales::percent_format(tasa, accuracy=1), "de aumento diario", #y
+                                                  "\nTasa de contagios diarios:", round(tasa_diaria, digits=3), "% de aumento diario", #y
+                                                  "\nTasa de prevalencia:", round(prevalencia, digits=3), "activos por cada 100 mil habitantes", #x
+                                                  "\nCasos según superficie de la comuna:", round(densidad, digits=4), "casos por km2" ))),
+                             size = max(datos_regiones_conrm()$activos) * (15/max(datos_scatter_pais_sinrm()$activos)),
+                             col= "#e01a1a",
+                             alpha=0.1,
+                             show.legend = FALSE) +
       geom_point_interactive(aes(tooltip = (paste(region,
-                                                 "\nCasos activos:", activos, "casos",
-                                                 #"\nTasa de contagios diarios:", scales::percent_format(tasa, accuracy=1), "de aumento diario", #y
-                                                 "\nTasa de contagios diarios:", round(tasa_diaria, digits=3), "% de aumento diario", #y
-                                                 "\nTasa de prevalencia:", round(prevalencia, digits=3), "activos por cada 100 mil habitantes", #x
-                                                 "\nCasos según superficie de la comuna:", round(densidad, digits=4), "casos por km2" ))
+                                                  "\nCasos activos:", activos, "casos",
+                                                  #"\nTasa de contagios diarios:", scales::percent_format(tasa, accuracy=1), "de aumento diario", #y
+                                                  "\nTasa de contagios diarios:", round(tasa_diaria, digits=3), "% de aumento diario", #y
+                                                  "\nTasa de prevalencia:", round(prevalencia, digits=3), "activos por cada 100 mil habitantes", #x
+                                                  "\nCasos según superficie de la comuna:", round(densidad, digits=4), "casos por km2" ))
       ) ) +
       geom_point(shape = 1, colour = "black", alpha=0.3) + #borde negro
       
@@ -4621,7 +4622,7 @@ shinyServer(function(input, output, session) {
             plot.caption.position = "plot",
             text = element_text(family = "Open Sans")) +
       guides(size = guide_legend(override.aes = list(col = "#e01a1a"))) +
-      labs(subtitle = "Datos a nivel nacional",
+      labs(subtitle = paste("Datos a nivel nacional\n", "Última actualización:", format(max(datos_scatter_pais_sinrm()$fecha), "%d de %B"), "\n"),
            x="Tasa de prevalencia\n(casos activos por cada 100.000 habitantes)",
            y="Tasa de diaria equivalente de contagios\n(proporción de casos nuevos respecto a los activos del día anterior)",
            size="Casos activos\nde Covid-19",
@@ -4630,7 +4631,7 @@ shinyServer(function(input, output, session) {
     
     scatter_pais
     
-    })
+  })
   
   
   # Out ----
@@ -4649,6 +4650,155 @@ shinyServer(function(input, output, session) {
       )
     )
   })
+  
+  # Tasa de contagio ----
+  
+  tasa_contagio_g <- reactive({
     
+  covid_totales() %>%
+    tidyr::pivot_wider(values_from = casos, names_from = categoria) %>%
+    rename(nuevos=2,
+           totales=3,
+           activos=6) %>%
+    select(fecha, nuevos, totales, activos) %>%
+    arrange(desc(fecha)) %>%
+    mutate(tasa = nuevos/activos) %>%
+    mutate(promedio_movil = zoo::rollmean(tasa, k = 7, 
+                                          fill = NA, align="left")) %>%
+    filter(fecha>="2020-04-06") %>%
+    ggplot(aes(x=fecha)) +
+    # geom_col(aes(y=tasa, fill="Tasa de contagios\n(aumento diario)"), 
+    #          width=0.6) +
+      geom_col_interactive(aes(y=tasa, fill="Tasa de contagios\n(aumento diario)",
+                                    tooltip = paste("Tasa de aumento diario de contagios:", paste0(round(tasa*100, digits=1), "%"),
+                                                    "\nPromedio semanal de tasa contagios:", paste0(round(promedio_movil*100, digits=1), "%")
+                                    )),
+               width=0.6) +
+    geom_line(aes(y=promedio_movil,
+                  col="Tasa de contagios\n(promedio móvil semanal)"), 
+              size=2, alpha=0.8) +
+    geom_text(aes(y=tasa, label = ifelse(tasa>0.085, 
+                                         paste0(round(tasa*100, digits=1), "%"),
+                                         "")), hjust=0.4, vjust=-0.5) +
+    scale_y_continuous(labels = percent_format(accuracy = 1),
+                       limits = c(0, 0.115) ) +
+    scale_x_date(breaks = seq(from = lubridate::ymd("2020-04-06"), 
+                              to = max(covid_totales()$fecha), by=1),#length.out = 10), 
+                 date_labels = "%d/%B") +
+    tema_barras_label +
+    scale_fill_manual(values = c("Tasa de contagios\n(aumento diario)" = "#AF87EB")) +
+    scale_color_manual(values = c("Tasa de contagios\n(promedio móvil semanal)" = "#df1a57")) +
+    theme(axis.title.x = element_blank(),
+          axis.text.x = element_text(size = 13, angle = 45, hjust = 1, 
+                                     margin = margin(t = -5, b = 0)),
+          legend.title = element_blank(),
+          legend.position = "bottom",
+          legend.key = element_blank(),
+          plot.caption = element_text(margin = margin(t = 10)),
+          legend.key.size = unit(1.7, "lines"),
+          axis.text.y = element_text(margin = margin(l=5, r = -15))) +
+    guides(colour = guide_legend(order = 1)) +
+    labs(subtitle = paste("Nivel nacional\nDesde el 6 de abril al", format(max(covid_totales()$fecha), "%d de %B")),
+         caption = "Mesa de datos Covid-19, casos totales nacionales diarios\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
+         y = "Tasas de contagios diarios")
+  
 })
   
+  
+  # Out ----
+  output$tasa_contagio_int <- renderGirafe({
+    girafe(
+      ggobj = tasa_contagio_g(),
+      # width_svg = 16,
+      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
+      height_svg = 7,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        opts_sizing(rescale = TRUE, width = .95),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
+  
+  
+  # Recuperados vs. activos ----
+  
+  recuperados_activos_g <- reactive({
+  
+    covid_totales() %>%
+    tidyr::pivot_wider(values_from = casos, names_from = categoria) %>%
+    rename(nuevos=2,
+           totales=3,
+           recuperados=4,
+           activos=6) %>%
+    select(fecha, activos, nuevos, recuperados) %>%
+    arrange((fecha)) %>%
+    #calcular nuevos recuperados al restar con casos del día anterior
+    mutate(recuperados_nuevos = lag(recuperados),
+           recuperados = recuperados-recuperados_nuevos) %>%
+    tidyr::pivot_longer(cols = c(recuperados, nuevos), 
+                 values_to = "casos", names_to = "grupo") %>%
+    filter(fecha>="2020-04-06") %>%
+    #graficar
+    ggplot() +
+    geom_line(aes(x=fecha, y=casos, 
+                  col=grupo), size=2) +
+    annotate(geom="point", x=lubridate::ymd("2020-04-24"), y=510,
+             alpha=.3, size=15, col="#df1a57") +
+    scale_colour_manual(labels = c("Nuevos", "Recuperados"),
+                        values = c("#df1a57","#AF87EB"),
+                        aesthetics = c("fill", "col")) +
+    scale_x_date(breaks = seq(from = lubridate::ymd("2020-04-06"), 
+                              to = max(covid_totales()$fecha), by=1),#length.out = 10), 
+                 date_labels = "%d/%B",
+                 expand = expansion(mult = c(0, 0.2))) +
+    geom_text_repel(aes(x = max(fecha), y = casos, col=grupo,
+                        label = ifelse(fecha == max(fecha),
+                                       paste0(stringr::str_to_sentence(grupo), 
+                                              ": ", 
+                                              casos), "")),
+                    hjust = 0, nudge_x = 2,
+                    show.legend = FALSE,
+                    box.padding = unit(2, "points"), 
+                    min.segment.length = unit(7, "points"),
+                    segment.alpha = 0.2, segment.size = 1.5, size = 5, family = "Open Sans", direction = "y") +
+    #tema_barras_label +
+    tema_lineas +
+    theme(axis.text.x = element_text(size = 13, angle = 45, hjust = 1, margin = margin(t = 0, b = -5)),
+          axis.text.y = element_text(margin = margin(r = 5)),
+          #panel.grid.major.y = element_line(color = "gray90", linetype = "solid"),
+          legend.position = "bottom",
+          legend.title = element_blank(),
+          axis.title.x = element_blank(),
+          legend.key = element_blank(),
+          legend.text = element_text(margin = margin(r = 20)),
+          plot.caption = element_text(margin = margin(t = 10)),
+          legend.key.size = unit(1.2, "lines"),
+          plot.title.position = "plot") +
+    #linea_gris_y +
+    labs(subtitle = paste("Nivel nacional\nDesde el 6 de abril al", format(max(covid_totales()$fecha), "%d de %B")),
+         caption = "Mesa de datos Covid-19, casos totales nacionales diarios\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
+         y = "Casos nuevos diarios")
+  })
+  
+  # Out ----
+  output$recuperados_activos_int <- renderGirafe({
+    girafe(
+      ggobj = recuperados_activos_g(),
+      # width_svg = 16,
+      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
+      height_svg = 7,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        opts_sizing(rescale = TRUE, width = .95),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
+  
+  
+})
