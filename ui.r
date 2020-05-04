@@ -237,6 +237,7 @@ visibility: hidden}")),
               # Totales nacionales ----
               h3("Resumen de datos totales nacionales de Covid-19"),
               p("En el presente gráfico se presentan estadísticas generales consolidadas para tu análisis: evolución de contagios confirmados; casos activos (que corresponden a personas vivas  confirmadas cuya fecha de inicio de síntomas en la notificación es menor o igual a 14 días a la fecha del reporte actual); casos recuperados (estimaciones, según criterio del MINSAL); casos nuevos (confirmados por exámenes hasta las 21 horas del día anterior a esta publicación) y evolución de defunciones por COVID-19. Los casos totales corresponden a la suma de los casos activos, recuperados y fallecidos. Los casos nuevos se encuentran integrados en la cifra de casos activos."),
+              p("Nota: los casos nuevos incluyen tanto a los casos asintomáticos como los sintomáticos"),
               girafeOutput("g_totales_nacionales_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
               div(align = "right", downloadButton("g_totales_nacionales_xlsx", "Descargar datos", class="descargar")),

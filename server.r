@@ -2655,6 +2655,11 @@ shinyServer(function(input, output, session) {
     
     p <- f_totales_nacionales() %>%
       filter(categoria != "Fallecidos") %>% 
+      filter(categoria != "nuevos sin sintomas") %>% 
+      filter(categoria != "nuevos con sintomas") %>% 
+      ungroup()%>%
+      mutate(categoria = recode(categoria, 
+                                "nuevos totales"="nuevos")) %>%
       ggplot(aes(fecha, casos,
                  col = forcats::fct_reorder(categoria, final),
                  fill = forcats::fct_reorder(categoria, final)
@@ -2688,7 +2693,7 @@ shinyServer(function(input, output, session) {
         date_labels = "%d/%B",
         expand = expansion(mult = c(0, 0.25))
       ) +
-      scale_color_manual_interactive(drop = TRUE, values = degradado1(5)) +
+      scale_color_manual_interactive(drop = TRUE, values = degradado1(6)) +
       theme(legend.position = "none") +
       coord_cartesian(clip = "off") + # , ylim=c(0,900)) +
       tema_lineas +
@@ -4376,7 +4381,7 @@ shinyServer(function(input, output, session) {
       geom_point_interactive(aes(tooltip = paste(comuna,
                                                  "\nCasos activos:", activos, "casos",
                                                  #"\nTasa de contagios diarios:", scales::percent_format(tasa, accuracy=1), "de aumento diario", #y
-                                                 "\nTasa de contagios diarios:", round(tasa_diaria, digits=2), "% de aumento diario", #y
+                                                 "\nTasa de contagios diarios:", round(tasa_diaria*100, digits=2), "% de aumento diario", #y
                                                  "\nTasa de prevalencia:", round(prevalencia, digits=2), "activos por cada 100 mil habitantes", #x
                                                  "\nCasos según superficie de la comuna:", round(densidad, digits=2), "casos por km2" ) 
       ) ) +
@@ -4435,7 +4440,7 @@ shinyServer(function(input, output, session) {
         y="Tasa de diaria equivalente de contagios\n(proporción de casos nuevos respecto a los activos del día anterior)",
         size="Casos activos\nde Covid-19",
         col="Casos según\nsuperficie",
-        caption = "Fuente: Análisis basado en modelo SIR adaptado por los profesores\nDuvan Henao y Gregorio Moreno, de la Facultad de Matemáticas UC.\nDatos: Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
+        caption = "Fuente: Visualización ideada por Duvan Henao y Gregorio Moreno, de la Facultad de Matemáticas UC.\nDatos: Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
     
     scatterplot
     
@@ -4550,7 +4555,7 @@ shinyServer(function(input, output, session) {
                                  tooltip = (paste(region,
                                                   "\nCasos activos:", activos, "casos",
                                                   #"\nTasa de contagios diarios:", scales::percent_format(tasa, accuracy=1), "de aumento diario", #y
-                                                  "\nTasa de contagios diarios:", round(tasa_diaria, digits=3), "% de aumento diario", #y
+                                                  "\nTasa de contagios diarios:", round(tasa_diaria*100, digits=3), "% de aumento diario", #y
                                                   "\nTasa de prevalencia:", round(prevalencia, digits=3), "activos por cada 100 mil habitantes", #x
                                                   "\nCasos según superficie de la comuna:", round(densidad, digits=4), "casos por km2" ))),
                              size = max(datos_regiones_conrm()$activos) * (15/max(datos_scatter_pais_sinrm()$activos)),
@@ -4627,7 +4632,7 @@ shinyServer(function(input, output, session) {
            y="Tasa de diaria equivalente de contagios\n(proporción de casos nuevos respecto a los activos del día anterior)",
            size="Casos activos\nde Covid-19",
            col="Casos según\nsuperficie",
-           caption = "Fuente: Análisis basado en modelo SIR adaptado por los profesores\nDuvan Henao y Gregorio Moreno, de la Facultad de Matemáticas UC.\nDatos: Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
+           caption = "Fuente: Visualización ideada por Duvan Henao y Gregorio Moreno, de la Facultad de Matemáticas UC.\nDatos: Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
     
     scatter_pais
     
