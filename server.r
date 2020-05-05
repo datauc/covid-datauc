@@ -213,33 +213,53 @@ shinyServer(function(input, output, session) {
   
   f_casos_genero_edad <- function() {
     casos_genero_edad() %>%
-      mutate(grupo_de_edad = recode(grupo_de_edad,
-                                    "00 - 04 años" = "00 - 14 años",
-                                    "05 - 09 años" = "00 - 14 años",
-                                    "10 - 14 años" = "00 - 14 años", #
-                                    "15 - 19 años" = "15 - 29 años",
-                                    "20 - 24 años" = "15 - 29 años",
-                                    "25 - 29 años" = "15 - 29 años", #
-                                    "30 - 34 años" = "30 - 44 años",
-                                    "35 - 39 años" = "30 - 44 años",
-                                    "40 - 44 años" = "30 - 44 años", #
-                                    "45 - 49 años" = "45 - 59 años",
-                                    "50 - 54 años" = "45 - 59 años",
-                                    "55 - 59 años" = "45 - 59 años", #
-                                    "60 - 64 años" = "60 - 79 años",
-                                    "65 - 69 años" = "60 - 79 años",
-                                    "70 - 74 años" = "60 - 79 años",
-                                    "75 - 79 años" = "60 - 79 años", #
-                                    "80 y más años" = "80 y más años"
-      )) %>%
+      #Recodificación a 6 grupos
+      # mutate(grupo_de_edad = recode(grupo_de_edad,
+      #                               "00 - 04 años" = "00 - 14 años",
+      #                               "05 - 09 años" = "00 - 14 años",
+      #                               "10 - 14 años" = "00 - 14 años", #
+      #                               "15 - 19 años" = "15 - 29 años",
+      #                               "20 - 24 años" = "15 - 29 años",
+      #                               "25 - 29 años" = "15 - 29 años", #
+      #                               "30 - 34 años" = "30 - 44 años",
+      #                               "35 - 39 años" = "30 - 44 años",
+      #                               "40 - 44 años" = "30 - 44 años", #
+      #                               "45 - 49 años" = "45 - 59 años",
+      #                               "50 - 54 años" = "45 - 59 años",
+      #                               "55 - 59 años" = "45 - 59 años", #
+      #                               "60 - 64 años" = "60 - 79 años",
+      #                               "65 - 69 años" = "60 - 79 años",
+      #                               "70 - 74 años" = "60 - 79 años",
+      #                               "75 - 79 años" = "60 - 79 años", #
+      #                               "80 y más años" = "80 y más años"
+      # )) %>%
+    #Recodificación sugerida por Gregorio
+    mutate(grupo_de_edad = recode(grupo_de_edad,
+                                  "00 - 04 años" = "0 - 19 años",
+                                  "05 - 09 años" = "0 - 19 años",
+                                  "10 - 14 años" = "0 - 19 años", 
+                                  "15 - 19 años" = "0 - 19 años", 
+                                  "20 - 24 años" = "20 - 39 años", #
+                                  "25 - 29 años" = "20 - 39 años",  
+                                  "30 - 34 años" = "20 - 39 años",
+                                  "35 - 39 años" = "20 - 39 años",
+                                  "40 - 44 años" = "40 - 59 años", #
+                                  "45 - 49 años" = "40 - 59 años",
+                                  "50 - 54 años" = "40 - 59 años",
+                                  "55 - 59 años" = "40 - 59 años", #
+                                  "60 - 64 años" = "60 años y más",
+                                  "65 - 69 años" = "60 años y más",
+                                  "70 - 74 años" = "60 años y más",
+                                  "75 - 79 años" = "60 años y más", 
+                                  "80 y más años" = "60 años y más"
+    )) %>%
       mutate(sexo = recode(sexo,
                            "M" = "Hombres",
                            "F" = "Mujeres"
       )) %>%
       mutate(
         grupo_de_edad = stringr::str_replace(grupo_de_edad, " - ", "-"),
-        grupo_de_edad = stringr::str_replace(grupo_de_edad, " y más", "+"),
-        grupo_de_edad = stringr::str_replace(grupo_de_edad, "00", "0")
+        grupo_de_edad = stringr::str_replace(grupo_de_edad, " y más", " +"),
       ) %>%
       group_by(fecha, sexo, grupo_de_edad) %>%
       summarize(casos = sum(casos)) %>%
@@ -1009,6 +1029,7 @@ shinyServer(function(input, output, session) {
     #   g_reg_nuevos()
     # )
     
+    reactive
     
     p <- covid_region() %>%
       na.omit() %>%
@@ -1028,6 +1049,11 @@ shinyServer(function(input, output, session) {
         ))
     }
     
+    if (input$regiones_g_excl_rm=="si") {
+      p <- p %>%
+        filter(region!="Metropolitana")
+    }
+    
     p <- p %>%
       mutate(fecha2 = as.factor(paste0(lubridate::day(fecha), "-", lubridate::month(fecha)))) %>%
       mutate(region = recode(region,
@@ -1039,10 +1065,10 @@ shinyServer(function(input, output, session) {
       ggplot(aes(fecha, casos,
                  group = region,
                  col = region2,
-                 alpha = region2,
+                 #alpha = region2,
                  size = region2
       )) +
-      geom_line(size = 2) +
+      geom_line(size = 2, alpha=0.8) +
       geom_text_repel(aes(
         x = max(fecha), y = casos,
         label = ifelse(fecha == max(fecha),
@@ -1063,7 +1089,7 @@ shinyServer(function(input, output, session) {
         date_labels = "%d/%B",
         expand = expansion(mult = c(0, 0.32))
       ) +
-      scale_alpha_discrete(range = c(0.5, 1)) +
+      #scale_alpha_discrete(range = c(0.5, 1)) +
       scale_size_discrete(range = c(2, 4)) +
       scale_color_manual(values = rev(c("#DF1A57", "#7e47d1"))) +
       # scale_y_continuous(expand = expansion(mult=c(0.025, 0.025))) +
@@ -1431,12 +1457,31 @@ shinyServer(function(input, output, session) {
   # Examenes ----
   
   g_examenes <- reactive({
-    # req(
-    #   covid_totales(),
-    #   g_hospitalizados()
-    # )
+  
+    p <- covid_examenes()
     
-    p <- covid_examenes() %>%
+    #Color para región elegida
+    if (region_elegida() == "Total") {
+      p <- p %>%
+        mutate(region2 = case_when(
+          region == "Metropolitana" ~ "Sí",
+          TRUE ~ "No"
+        ))
+    } else {
+      p <- p %>%
+        mutate(region2 = case_when(
+          region == region_elegida() ~ "Sí",
+          TRUE ~ "No"
+        ))
+    }
+    
+    #Filtrar RM
+    if (input$regiones_pcr_g_excl_rm=="si") {
+      p <- p %>%
+        filter(region!="Metropolitana")
+    }
+    
+    p <- p %>%
       na.omit() %>%
       filter(fecha >= "2020-04-10") %>%
       mutate(region = recode(region,
@@ -1447,24 +1492,24 @@ shinyServer(function(input, output, session) {
                              "Del Libertador General Bernardo O’Higgins" = "O'Higgins",
                              "Magallanes y la Antartica" = "Magallanes"
       )) %>%
-      mutate(region2 = case_when(
-        region == "Metropolitana" ~ "Sí",
-        TRUE ~ "No"
-      )) %>%
       group_by(region) %>%
       mutate(Orden = casos[fecha == max(fecha)]) %>%
       group_by(region, region2, fecha, Orden) %>%
       summarize(casos = sum(casos)) %>%
+      #graficar
       ggplot(aes(fecha, casos,
                  group = region,
-                 col = forcats::fct_reorder(region, Orden),
-                 fill = forcats::fct_reorder(region, Orden)
-      )) +
+                 # col = forcats::fct_reorder(region, Orden),
+                 # fill = forcats::fct_reorder(region, Orden)
+                 col = region2,
+                 fill = region2,
+                 size= region2)
+      ) +
       geom_line_interactive(aes(
         tooltip = stringr::str_wrap(
           paste("Región de", region), 40
         )
-      ), size = 2) +
+      ), size = 2, alpha=0.8) +
       geom_text_repel(aes(
         x = max(fecha), y = casos,
         label = ifelse(fecha == max(fecha),
@@ -1480,9 +1525,12 @@ shinyServer(function(input, output, session) {
         date_labels = "%d/%B",
         expand = expansion(mult = c(0, 0.25))
       ) +
-      scale_color_manual(values = degradado1(16)) +
-      scale_fill_manual(values = degradado1(16)) +
-      facet_wrap(~ forcats::fct_rev(region2), ncol = 1, scales = "free_y") +
+      # scale_color_manual(values = degradado1(16)) +
+      # scale_fill_manual(values = degradado1(16)) +
+      scale_size_discrete(range = c(2, 4)) +
+      scale_color_manual(values = rev(c("#DF1A57", "#7e47d1"))) +
+      scale_fill_manual(values = rev(c("#DF1A57", "#7e47d1"))) +
+      #facet_wrap(~ forcats::fct_rev(region2), ncol = 1, scales = "free_y") +
       theme(
         legend.position = "none",
         strip.text.x = element_blank()
@@ -1652,7 +1700,14 @@ shinyServer(function(input, output, session) {
   
   fallecidos_region_g <- reactive({ # grafico
     p <- fallecidos_region() %>%
-      filter(region != "Total") %>%
+      filter(region != "Total")
+    
+    if (input$regiones_fallecidos_g_excl_rm=="si") {
+      p <- p %>%
+        filter(region!="Metropolitana")
+    }
+    
+    p <- p %>%
       na.omit() %>%
       group_by(region) %>%
       mutate(Orden = casos[fecha == max(fecha)]) %>%
@@ -2846,16 +2901,10 @@ shinyServer(function(input, output, session) {
       geom_point_interactive(aes(
         tooltip = stringr::str_wrap(
           paste(
-            "Se reportaron", casos, "casos nuevos de Covid-19 con respecto al día anterior en",
-            ifelse(region == "Metropolitana",
-                   paste("la región", region),
-                   ifelse(region == "Total",
-                          paste("el país"),
-                          paste("la región de", region)
-                   )
-            ), "al", format(fecha, "%d de %B")
+            "Se reportaron", casos, "casos nuevos de Covid-19 con respecto al día anterior en el país",
+            "al", format(fecha, "%d de %B")
           ), 40
-        ) # , data_id = porcentaje),
+        )
       ), size = 4, col = "#DF1A57") +
       geom_label(aes(
         label = ifelse(casos > 0, paste0("+", casos, ""), "0"),
@@ -2890,14 +2939,7 @@ shinyServer(function(input, output, session) {
       theme(legend.position = "bottom") +
       # labs(subtitle = paste("Entre el 22 de marzo y", format(max(covid_region()$fecha), "%d de %B") ),
       labs(
-        subtitle = paste(
-          ifelse(region_elegida() == "Metropolitana",
-                 paste("Región Metropolitana"),
-                 ifelse(region_elegida() == "Total",
-                        paste("Datos a nivel nacional"),
-                        paste("Región de", region_elegida())
-                 )
-          ),
+        subtitle = paste("Datos a nivel nacional",
           "\nEntre el 22 de marzo y", format(max(covid_region_nuevos()$fecha), "%d de %B")
         ),
         caption = "Mesa de datos COVID-19, casos nuevos por región incremental\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
@@ -2950,28 +2992,22 @@ shinyServer(function(input, output, session) {
                          ""
           )
         ),
-        hjust = 0,
-        nudge_x = 0.3,
+        hjust = 0, nudge_x = 0.3,
         box.padding = unit(1.7, "points"),
         min.segment.length = unit(8, "points"),
         segment.alpha = 0.3,
-        size = 5,
-        direction = "y"
+        size = 5, direction = "y"
       ) +
       scale_x_date(
         breaks = seq(
-          from = min(casos_genero_edad()$fecha),
-          to = max(casos_genero_edad()$fecha),
-          by = 2
-        ),
+          from = min(casos_genero_edad()$fecha), to = max(casos_genero_edad()$fecha),
+          by = 2),
         # length.out=10),
         expand = expansion(mult = c(0, 0.27)),
-        date_labels = "%d/%B"
-      ) +
+        date_labels = "%d/%B") +
       scale_color_manual(
         name = "edades",
-        values = rev(degradado7(6))
-      ) +
+        values = rev(degradado7(4)) ) +
       coord_cartesian(clip = "off") +
       facet_wrap(~sexo, ncol = 1) +
       tema_lineas +

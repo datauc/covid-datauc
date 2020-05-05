@@ -149,20 +149,32 @@ visibility: hidden}")),
       div(style = "display: inline-block;", strong("Casos Región Metropolitana: ")),
       div(style = "display: inline-block;", textOutput("casos_rm")),
       br(), br(),
+      
+      div(style = "display: inline-block;", strong("Región con más casos (exceptuando la RM): ")),
+      div(style = "display: inline-block;", textOutput("casos_top_region_no_rm")),
+      br(), br(),
+      
+      div(style = "display: inline-block;", strong("Región con menos casos: ")),
+      div(style = "display: inline-block;", textOutput("casos_min_region")),
+      br(), br(),
+      
+      div(style = "display: inline-block;", strong("Comuna con más casos: ")),
+      div(style = "display: inline-block;", textOutput("o_casos_top_comuna")),
+      br(), br(),
 
-      conditionalPanel(
-        condition = "input.selector_region != 'Total'",
-        div(style = "display: inline-block;", strong("Casos regionales: ")),
-        div(style = "display: inline-block;", textOutput("casos_region")),
-        div(style = "display: inline-block;", textOutput("region_elegida_p")),
-        br(), br(),
-      ),
+      # conditionalPanel(
+      #   condition = "input.selector_region != 'Total'",
+      #   div(style = "display: inline-block;", strong("Casos regionales: ")),
+      #   div(style = "display: inline-block;", textOutput("casos_region")),
+      #   div(style = "display: inline-block;", textOutput("region_elegida_p")),
+      #   br(), br(),
+      # ),
 
       # div(style = "display: inline-block;", strong("Casos recuperados totales: ")),
       # div(style = "display: inline-block;", textOutput("casos_recuperados")),
       # br(),br(),
 
-      div(style = "display: inline-block;", strong("Casos fallecidos totales: ")),
+      div(style = "display: inline-block;", strong("Número de fallecidos totales: ")),
       div(style = "display: inline-block;", textOutput("casos_fallecidos")),
       br(), br(),
 
@@ -171,29 +183,21 @@ visibility: hidden}")),
       # div(style = "display: inline-block;", textOutput("total_examenes"), p("desde el 9 de abril")),
       # br(),br(),
 
+      
+      div(style = "display: inline-block;", strong("Pacientes hospitalizados en UCI: ")),
+      div(style = "display: inline-block;", textOutput("total_hospitalizados")),
+      br(), br(),
+      
+      
       strong("Exámenes PCR realizados en total: "),
       div(style = "display: inline-block;", textOutput("total_examenes")),
       br(), br(),
 
-      div(style = "display: inline-block;", strong("Pacientes actualmente hospitalizados en UCI: ")),
-      div(style = "display: inline-block;", textOutput("total_hospitalizados")),
-      br(), br(),
 
-      div(style = "display: inline-block;", strong("Región con más casos: ")),
-      div(style = "display: inline-block;", textOutput("casos_top_region")),
-      br(), br(),
+      # div(style = "display: inline-block;", strong("Región con más casos: ")),
+      # div(style = "display: inline-block;", textOutput("casos_top_region")),
+      # br(), br(),
 
-      div(style = "display: inline-block;", strong("Región con más casos (exceptuando la RM): ")),
-      div(style = "display: inline-block;", textOutput("casos_top_region_no_rm")),
-      br(), br(),
-
-      div(style = "display: inline-block;", strong("Región con menos casos: ")),
-      div(style = "display: inline-block;", textOutput("casos_min_region")),
-      br(), br(),
-
-      div(style = "display: inline-block;", strong("Comuna con más casos: ")),
-      div(style = "display: inline-block;", textOutput("o_casos_top_comuna")),
-      br(), br(),
       
       div(align = "center", img(src="virus_rojizo.png", width=40)),
       br(),
@@ -276,7 +280,7 @@ visibility: hidden}")),
               
               #Fallecidos en total ----
               h3("Personas fallecidas en total por Covid-19"),
-              p("Este gráfico indica la evolución de fallecimientos producidos por Covid-19 a nivel total en el país."),
+              p("Este gráfico indica la evolución del número de fallecidos a causa del Covid-19 a nivel total en el país."),
               girafeOutput("fallecidos_totales_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
               div(align = "right", downloadButton("g_fallecidos_total_xlsx", "Descargar datos", class="descargar")),
@@ -304,7 +308,7 @@ visibility: hidden}")),
 
 
               # Hospitalizados por región ----
-              h3("Casos de pacientes hospitalizados por Covid-19 en camas UCI por región"),
+              h3("Número de pacientes hospitalizados por Covid-19 en camas UCI por región"),
               p("El siguiente gráfico presenta la evolución de pacientes hospitalizados en camas críticas en cada una de las regiones del país, exceptuando la región Metropolitana."),
               girafeOutput("g_hospitalizados_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
@@ -355,6 +359,13 @@ visibility: hidden}")),
               # Casos por región -----
               h3("Casos de Covid-19 por región"),
               p("En el siguiente gráfico se presentan las curvas de contagios confirmados comparativas por región. Seleccione una región en el selector para destacarla dentro del gráfico."),
+              
+              radioButtons("regiones_g_excl_rm", "Excluir Región Metropolitana:",
+                           choiceNames = c("Excluir",
+                                           "No excluir"),
+                           choiceValues = c("si", 
+                                            "no"),
+                           selected = c("Excluir" = "si")),
 
               girafeOutput("g_regiones_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
@@ -393,6 +404,16 @@ visibility: hidden}")),
               # Exámenes ----
               h3("Exámenes PCR para Covid-19"),
               p("En el siguiente gráfico se presenta la distribución de Exámenes PCR (Reacción en cadena de la polimerasa) realizados por laboratorios en cada una de las regiones del país."),
+              p("Elija una región en el selector de más arriba para destacarla por sobre el resto"),
+              
+              radioButtons("regiones_pcr_g_excl_rm", "Excluir Región Metropolitana:",
+                           choiceNames = c("Excluir",
+                                           "No excluir"),
+                           choiceValues = c("si", 
+                                            "no"),
+                           selected = c("Excluir" = "si")),
+        
+              
               girafeOutput("g_examenes_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
               div(align = "right", downloadButton("regiones_examenes_xlsx", "Descargar datos", class="descargar")),
@@ -417,6 +438,15 @@ visibility: hidden}")),
               # Fallecidos por región incremental
               h3("Fallecidos por región incremental"),
               p("Este gráfico indica la evolución de las cantidades de personas fallecidas a través de todas las regiones del país, permitiendo una mirada generalizada del efecto de la pandemia."),
+              
+              radioButtons("regiones_fallecidos_g_excl_rm", "Excluir Región Metropolitana:",
+                           choiceNames = c("Excluir",
+                                           "No excluir"),
+                           choiceValues = c("si", 
+                                            "no"),
+                           selected = c("Excluir" = "si")),
+              
+              
               girafeOutput("fallecidos_region_int", width = "100%", height = "100%") %>%
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
               div(align = "right", downloadButton("fallecidos_region_inc_xlsx", "Descargar datos", class="descargar")),
