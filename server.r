@@ -443,6 +443,11 @@ shinyServer(function(input, output, session) {
     paste(format(max(covid_region()$fecha), "%d de %B"))
   })
   
+  # fecha en formato "%%día de %%mes"
+  output$fecha_maxima_totales_format <- renderText({
+    paste(format(max(covid_totales()$fecha), "%d de %B"))
+  })
+  
   # Región elegida (input selector)
   output$region_elegida <- renderText({
     paste(region_elegida())
@@ -484,6 +489,28 @@ shinyServer(function(input, output, session) {
   })
   output$casos_total <- renderText({
     paste(casos_total_ultimo())
+  })
+  
+  # casos activos
+  casos_activos_ultimo <- reactive({
+    covid_totales() %>%
+      filter(fecha == max(fecha)) %>%
+      filter(categoria == "Casos activos") %>%
+      summarize(casos = casos)
+  })
+  output$casos_activos_ultimo <- renderText({
+    paste(casos_activos_ultimo())
+  })
+  
+  # casos nuevos
+  casos_nuevos_ultimo <- reactive({
+    covid_totales() %>%
+      filter(fecha == max(fecha)) %>%
+      filter(categoria == "Casos nuevos totales") %>%
+      summarize(casos = casos)
+  })
+  output$casos_nuevos_ultimo <- renderText({
+    paste(casos_nuevos_ultimo())
   })
   
   # casos fallecidos
@@ -3845,7 +3872,7 @@ shinyServer(function(input, output, session) {
       ) +
       scale_color_manual(
         name = "edades",
-        values = rev(degradado7(7))
+        values = rev(degradado7(13))
       ) +
       coord_cartesian(clip = "off") +
       facet_wrap(~sexo, ncol = 1) +

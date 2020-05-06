@@ -140,9 +140,17 @@ visibility: hidden}")),
       div(style = "display: inline-block;", em("Última actualización: ")),
       div(style = "display: inline-block;", textOutput("fecha_maxima_region_format")),
       br(), br(),
+      
+      div(style = "display: inline-block;", strong("Casos activos: ")),
+      div(style = "display: inline-block;", textOutput("casos_activos_ultimo")),
+      br(), br(),
+      
+      div(style = "display: inline-block;", strong("Casos nuevos: ")),
+      div(style = "display: inline-block;", textOutput("casos_nuevos_ultimo")),
+      br(), br(),
 
 
-      div(style = "display: inline-block;", strong("Casos totales confirmados: ")),
+      div(style = "display: inline-block;", strong("Casos totales a la fecha: ")),
       div(style = "display: inline-block;", textOutput("casos_total")),
       br(), br(),
 
