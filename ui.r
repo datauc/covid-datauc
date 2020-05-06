@@ -337,17 +337,15 @@ visibility: hidden}")),
               ####
               br(),
               # p("Esta sección contiene datos generales sobre el Coronavirus en Chile: casos totales de infección, casos desagregados por región, y finalmente una visión acumulada que compara los casos de Coronavirus de la Región Metropolitana con el resto de las regiones del país."),
-              p("En esta sección podrás visualizar los datos sobre la evolución de los contagios por Coronavirus en Chile, a nivel país y desagregados por región. 
-                A continuación, selecciona la región de tu interés para conocer la información local."),
+              p("En esta sección podrás visualizar los datos sobre la evolución de los contagios por Coronavirus en Chile, a nivel país y desagregados por región."),
               br(),
 
               # (selector región)
-              p("Selecciona una región de la lista para adaptar los gráficos de esta sección a tu región de interés."),
+              strong("Selecciona una región para destacarla en cada gráfico:"),
               selectInput("selector_region",
                 width = "70%",
                 label = NULL,
                 choices = NULL,
-                # choices = "Cargando...",#covid_region %>% select(Region)
                 selected = NULL
               ),
 
@@ -385,7 +383,7 @@ visibility: hidden}")),
 
 
               # Regiones tabla ----
-              h3("Regiones de Chile con más casos de Covid-19"),
+              h3("Regiones ordenadas según cantidad de casos de Covid-19"),
               p("En la siguiente tabla se presenta el ranking de las regiones del país con más casos confirmados de COVID-19, información que se complementa con la tasa de contagios por cada 100 mil habitantes."),
               formattableOutput("t_casos_top_10_region") %>% 
                 withSpinner(type = 7, size = 1, color = "#fce8ef"),
@@ -743,7 +741,7 @@ visibility: hidden}")),
               p("El", strong("tamaño de los puntos"), "representa la cantidad de casos activos en cada comuna: a mayor  tamaño, mayor cantidad de casos activos."),
               p("El", strong("color de los puntos"), "indica la densidad de casos en cada comuna: a mayor intensidad de color, mayor cantidad de casos activos de Covid-19 en relación a la superficie de la comuna en metros cuadrados, lo que indica una concentración física o cercanía de  mayor cantidad de personas contagiadas, lo que representa un aumento del riesgo de contagio."),
               p("La", strong("posición vertical"), "de los puntos representa una mayor tasa de contagios en la comuna: mientras más arriba esté el punto significa que más han aumentado los casos en la última semana. Elporcentaje indicado para esta medida es la tasa equivalente de aumento de contagios, que representa un cálculo del porcentaje diario de aumentos a partir de la comparación de las cifras más recientes con las de 7 días antes."),
-              p("Finalmente, la", strong("posición horizontal"), "de los puntos indica la tasa de contagios por cada 100.000 habitantes: mientras más a la derecha se ubiquen los puntos, significa que una tasa mayor de personas se encuentra activamente contagiada de acuerdo a la población de dicha comuna, por lo que ésta representa una métrica que permite comparar la cantidad de casos activos entre comunas de poblaciones distintas."),
+              p("Finalmente, la", strong("posición horizontal"), "de los puntos indica la tasa de incidencia por cada 100.000 habitantes: mientras más a la derecha se ubiquen los puntos, significa que una tasa mayor de personas se encuentra activamente contagiada de acuerdo a la población de dicha comuna, por lo que ésta representa una métrica que permite comparar la cantidad de casos activos entre comunas de poblaciones distintas."),
               br(),
                 
               strong("Elija una región para analizar:"),

@@ -1023,11 +1023,7 @@ shinyServer(function(input, output, session) {
   # Gráfico todas las regiones ----
   
   g_regiones <- reactive({
-    # req(
-    #   covid_region(),
-    #   region_elegida(),
-    #   g_reg_nuevos()
-    # )
+
     
     reactive
     
@@ -2748,7 +2744,10 @@ shinyServer(function(input, output, session) {
         date_labels = "%d/%B",
         expand = expansion(mult = c(0, 0.25))
       ) +
-      scale_color_manual_interactive(drop = TRUE, values = degradado1(6)) +
+      #scale_color_manual_interactive(drop = TRUE, values = rev(degradado1(4))) +
+      scale_color_manual(drop=TRUE,
+                         values = c("#952AA5", "#7033CC", "#DF1A57", "#BA227E")) +
+                         #degradado7_3 <- colorRampPalette(c("#DF1A57", "#c2389f", "#5933cc", "#e481b3", "#5fa6ec"))
       theme(legend.position = "none") +
       coord_cartesian(clip = "off") + # , ylim=c(0,900)) +
       tema_lineas +
@@ -4455,7 +4454,7 @@ shinyServer(function(input, output, session) {
             legend.background = element_blank(),
             legend.title = element_text(size=15, margin=margin(t=30, b=15)),
             panel.background = element_rect(colour = "gray95", fill=NA, size=0.5) ) +
-      theme(legend.box.margin = margin(c(0,0,0,10))) +
+      theme(legend.box.margin = margin(c(0,0,0,20))) +
       theme(axis.title.x = element_text(size=15, margin=margin(b=10)),
             axis.text.y = element_text(size=13, margin=margin(l=10)),
             axis.title.y = element_text(size=15),
@@ -4651,7 +4650,7 @@ shinyServer(function(input, output, session) {
             legend.background = element_blank(),
             legend.title = element_text(size=15, margin=margin(t=30, b=15)),
             panel.background = element_rect(colour = "gray95", fill=NA, size=0.5) ) +
-      theme(legend.box.margin = margin(c(0,0,0,10))) +
+      theme(legend.box.margin = margin(c(0,0,0,20))) +
       theme(axis.title.x = element_text(size=15, margin=margin(b=10)),
             axis.text.y = element_text(size=13, margin=margin(l=10)),
             axis.title.y = element_text(size=15),
