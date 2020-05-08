@@ -4,6 +4,8 @@ shinyServer(function(input, output, session) {
   Sys.setlocale(category = "LC_TIME", locale = "es_ES.UTF-8") # Meses en español
   options(shiny.sanitize.errors = TRUE)
   
+  session$onSessionEnded(stopApp)
+  
   
   # Datos por región ----
   covid_region <- reactive({
