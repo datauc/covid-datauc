@@ -1,7 +1,7 @@
 shinyUI(fluidPage(
   # Prueba de commit nuevo repo
   # Inactividad ----
-  tags$head(tags$script("inactivity.js")),
+  #tags$head(tags$script("inactivity.js")),
 
   # Importar Open Sans
   tags$style(HTML("@import url('//fonts.googleapis.com/css?family=Open Sans:400,600');")),
