@@ -639,7 +639,7 @@ visibility: hidden}")),
               
               
           
-              # Ranking comunas con mas casos ----
+              # Ranking horizontal comunas con mas casos ----
               h3("Comunas de Chile con mayor cantidad de casos de Covid-19"),
               p("El siguiente gráfico ordena las 10 comunas del país con mayor cantidad casos confirmados, e indica también las tasas de incidencia del virus."),
               girafeOutput("rank_casos_comuna_int", width = "100%", height = "100%") %>%
@@ -651,7 +651,7 @@ visibility: hidden}")),
               
               
               
-              # Comunas con mayor tasa ----
+              # Comunas horizontal con mayor tasa ----
               h3("Comunas de Chile con mayor tasa de incidencia por Covid-19"),
               p("En el presente gráfico se presenta un ranking de las 10 comunas con mayor tasa de incidencia a nivel nacional. La tasa de incidencia (contagios por cada 100 mil habitantes) permite medir el impacto del virus de forma proporcional con respecto a sus poblaciones."),
               girafeOutput("comuna_tasa_ranking_int", width = "100%", height = "100%") %>%

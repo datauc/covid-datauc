@@ -4,7 +4,7 @@ shinyServer(function(input, output, session) {
   Sys.setlocale(category = "LC_TIME", locale = "es_ES.UTF-8") # Meses en español
   options(shiny.sanitize.errors = TRUE)
   
-  session$onSessionEnded(stopApp)
+  #session$onSessionEnded(stopApp)
   
   
   # Datos por región ----
@@ -1405,7 +1405,7 @@ shinyServer(function(input, output, session) {
             ), "al", format(fecha, "%d de %B")
           ), 40
         ) # , data_id = porcentaje),
-      ), size = 4, col = "#DF1A57") +
+      ), size = 2.5, col = "#DF1A57") +
       geom_label(aes(
         label = ifelse(casos > 0, paste0("+", casos, ""), "0"),
         y = casos
@@ -1417,7 +1417,8 @@ shinyServer(function(input, output, session) {
       scale_x_date(
         breaks = seq(
           from = lubridate::ymd("2020-03-22"), to = max(covid_region_nuevos()$fecha),
-          by = 1
+          #by = 1
+          length.out=15
         ),
         # length.out=15),
         expand = expansion(add = c(0, 0.6)),
@@ -1546,7 +1547,9 @@ shinyServer(function(input, output, session) {
       size = 5, direction = "y"
       ) +
       scale_x_date(
-        breaks = seq(from = lubridate::ymd("2020-04-09"), to = max(covid_examenes()$fecha), by = 1),
+        breaks = seq(from = lubridate::ymd("2020-04-09"), to = max(covid_examenes()$fecha), 
+                     #by = 1),
+                     length.out = 15),
         date_labels = "%d/%B",
         expand = expansion(mult = c(0, 0.25))
       ) +
@@ -1940,7 +1943,7 @@ shinyServer(function(input, output, session) {
             comuna, " al ", format(fecha, "%d de %B")
           ), 40
         ) # , data_id = porcentaje),
-      ), size = 4) +
+      ), size = 2.5) +
       geom_text(aes(
         label = ifelse(
           fecha != max(fecha), casos, ""
@@ -1974,7 +1977,8 @@ shinyServer(function(input, output, session) {
       scale_x_date(
         breaks = seq(
           from = min(covid_comuna()$fecha), to = max(covid_comuna()$fecha),
-          by = 1
+          length.out=20
+          #by = 1
         ), # length.out=10),
         expand = expansion(mult = c(0, 0.25)),
         date_labels = "%d/%B"
@@ -2301,7 +2305,8 @@ shinyServer(function(input, output, session) {
         breaks = seq(
           from = min(activos_comuna2()$fecha),
           to = max(activos_comuna2()$fecha),
-          by = 1
+          #by = 1
+          length.out = 15
         ),
         expand = expansion(add = c(0, 0.6)),
         date_labels = "%d/%B"
@@ -2544,7 +2549,7 @@ shinyServer(function(input, output, session) {
         caption = "Mesa de datos Covid-19, casos totales por comuna incremental\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
         y = "Cantidad y tasa de contagios por 100.000 habitantes"
       ) +
-      coord_flip(clip = "off", ylim = c(0, 800)) +
+      coord_flip(clip = "off", ylim = c(0, 7000)) +
       tema_barras_horizontales_3 +
       ocultar_título_leyenda +
       theme(
@@ -2655,7 +2660,7 @@ shinyServer(function(input, output, session) {
         caption = "Mesa de datos Covid-19, casos totales por comuna incremental\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
         y = "Cantidad y tasa de contagios por 100.000 habitantes"
       ) +
-      coord_flip(clip = "off", ylim = c(0, 1000)) +
+      coord_flip(clip = "off", ylim = c(0, 7000)) +
       tema_barras_horizontales_3 +
       ocultar_título_leyenda +
       theme(
@@ -2752,7 +2757,7 @@ shinyServer(function(input, output, session) {
             " al ", format(fecha, "%d de %B")
           ), 40
         )
-      ), size = 3) +
+      ), size = 2.5) +
       geom_text_repel(aes(
         x = max(fecha), y = casos,
         label = ifelse(fecha == max(fecha),
@@ -2769,7 +2774,8 @@ shinyServer(function(input, output, session) {
       direction = "y"
       ) +
       scale_x_date(
-        breaks = seq(from = min(covid_totales()$fecha), to = max(covid_totales()$fecha), length.out = 10),
+        breaks = seq(from = min(covid_totales()$fecha), to = max(covid_totales()$fecha), 
+                     length.out = 15),
         date_labels = "%d/%B",
         expand = expansion(mult = c(0, 0.25))
       ) +
@@ -2945,7 +2951,8 @@ shinyServer(function(input, output, session) {
       scale_x_date(
         breaks = seq(
           from = lubridate::ymd("2020-03-22"), to = max(covid_region_nuevos()$fecha),
-          by = 1
+          #by = 1
+          length.out=15
         ),
         # length.out=15),
         expand = expansion(add = c(0, 0.6)),
@@ -3193,7 +3200,7 @@ shinyServer(function(input, output, session) {
             "al", format(fecha, "%d de %B")
           ), 40
         )
-      ), size = 4) +
+      ), size = 2.5) +
       geom_text(aes(
         label = ifelse(fecha != max(fecha), casos,
                        ""
@@ -3219,7 +3226,9 @@ shinyServer(function(input, output, session) {
       size = 5, direction = "y"
       ) +
       scale_x_date(
-        breaks = seq(from = lubridate::ymd("2020-04-09"), to = max(covid_fallecidos()$fecha), by = 1), # length.out=10),
+        breaks = seq(from = lubridate::ymd("2020-04-09"), to = max(covid_fallecidos()$fecha), 
+                     #by = 1), 
+                    length.out=15),
         expand = expansion(mult = c(0, 0.27)),
         date_labels = "%d/%B"
       ) +
