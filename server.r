@@ -3285,7 +3285,7 @@ shinyServer(function(input, output, session) {
         breaks = seq(from = min(covid_totales()$fecha), to = max(covid_totales()$fecha), length.out = 10),
         date_labels = "%d/%B"
       ) +
-      coord_cartesian(ylim = c(0, .05)) +
+      coord_cartesian(ylim = c(0, .1)) +
       geom_text(aes(label = ifelse(Tasa != 0,
                                    ifelse(lubridate::day(fecha) %% 3 == 0,
                                           scales::percent(Tasa, accuracy = 0.01), ""
