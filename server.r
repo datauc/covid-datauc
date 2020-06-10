@@ -199,10 +199,11 @@ shinyServer(function(input, output, session) {
   
   f_letalidad <- function() {
     covid_totales() %>%
-      filter(categoria == "Casos activos" | categoria == "Fallecidos") %>%
+      filter(categoria == "Casos totales" | categoria == "Fallecidos") %>%
       tidyr::pivot_wider(id_cols = fecha, names_from = categoria, values_from = casos) %>%
-      rename(Activos = 3) %>%
-      mutate(Tasa = Fallecidos / Activos)
+      rename(Activos = 2) %>%
+      mutate(Tasa = Fallecidos / Activos) %>%
+      filter(Fallecidos != 0)
   }
   
   f_totales_nacionales <- function() {
@@ -3275,7 +3276,7 @@ shinyServer(function(input, output, session) {
               "El día", format(fecha, "%d de %B"), "se registró una tasa de mortalidad de un",
               scales::percent(Tasa, accuracy = 0.01),
               "de personas fallecidas entre los", Activos,
-              "casos activos"
+              "casos totales"
             ), 40
           )
         )
@@ -3299,7 +3300,7 @@ shinyServer(function(input, output, session) {
       labs( # title="Tasa de letalidad del Covid-19",
         subtitle = paste("Nivel nacional\nÚltima actualización:", format(max(covid_totales()$fecha), "%d de %B")),
         caption = "Mesa de datos Covid-19, casos totales por región incremental\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
-        y = "Tasa de letalidad (proporción de\nfallecimientos entre los casos activos)"
+        y = "Tasa de letalidad (proporción de\nfallecimientos entre los casos totales)"
       ) +
       tema_barras_label +
       ocultar_titulo_x +
