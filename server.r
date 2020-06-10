@@ -3521,7 +3521,8 @@ shinyServer(function(input, output, session) {
         breaks = seq(
           from = min(ventiladores()$fecha),
           to = max(ventiladores()$fecha),
-          by = 1
+          #by = 1
+          length.out = 15
         ),
         date_labels = "%d/%B"
       ) +
@@ -3642,7 +3643,8 @@ shinyServer(function(input, output, session) {
           from = min(pacientes_criticos()$fecha),
           to = max(pacientes_criticos()$fecha),
           # length.out = 10
-          by = 1
+          #by = 1
+          length.out = 15
         ),
         date_labels = "%d/%B"
       ) +
@@ -3766,7 +3768,8 @@ shinyServer(function(input, output, session) {
         breaks = seq(
           from = min(hosp_integrado()$fecha),
           to = max(hosp_integrado()$fecha),
-          by = 1
+          #by = 1
+          length.out = 15
         ),
         expand = expansion(mult = c(0, 0.27)),
         date_labels = "%d/%B"
@@ -4109,7 +4112,8 @@ shinyServer(function(input, output, session) {
         breaks = seq(
           from = min(uci_edad()$fecha),
           to = max(uci_edad()$fecha),
-          by = 1
+          #by = 1
+          length.out = 15
         ),
         expand = expansion(mult = c(0, 0.27)),
         date_labels = "%d/%B"
