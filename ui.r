@@ -616,6 +616,14 @@ visibility: hidden}")),
               br(),
               
               
+              #NUEVO Evolución de casos nuevos ----
+              h3("Evolución de casos nuevos en la Región Metropolitana"),
+              p("Este gráfico muestra la evolución semana a semana de la cantidad de casos nuevos semanales en las comunas más pobladas de la Región Metropolitana"),
+              girafeOutput("evolucion_casos_nuevos_int", width = "100%", height = "100%") %>%
+                withSpinner(type = 7, size = 1, color = "#fce8ef"),
+              br(),
+              
+              
 
               # Ranking casos y tasa de contagios por comuna ----
               h3("Comunas con mayor tasa de incidencia de Covid-19 según región"),
