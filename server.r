@@ -2371,6 +2371,80 @@ shinyServer(function(input, output, session) {
   
   
   
+  #NUEVO Evolución de casos RM ----
+  
+  evolucion_casos_nuevos_g <- reactive({
+    p <- nuevos_comuna() %>%
+      filter(codigo_region==13) %>%
+      filter(inicio_semana_epidemiologica > ymd("2020-04-01")) %>%
+      filter(poblacion > 150000) %>%
+      filter(inicio_semana_epidemiologica != max(inicio_semana_epidemiologica)) %>%
+      mutate(comuna = stringr::str_replace(comuna, "Nunoa", "Ñuñoa"),
+             comuna = stringr::str_replace(comuna, "Penalolen", "Peñalolén"),
+             comuna = stringr::str_replace(comuna, "Estacion", "Estación"),
+             comuna = stringr::str_replace(comuna, "Maipu", "Maipú")) %>%
+      group_by(comuna) %>%
+      mutate(final = sum(casos)) %>%
+      mutate(prop = casos/final) %>%
+      select(comuna, casos, final, prop, everything()) %>%
+      ungroup() %>%
+      mutate(semana = paste(format(inicio_semana_epidemiologica, "%d de %B"),
+                            "al\n",
+                            format(fin_semana_epidemiologica, "%d de %B"))) %>%
+      mutate(semana = forcats::fct_reorder(semana, inicio_semana_epidemiologica)) %>%
+      #glimpse()
+      #graficar
+      ggplot(aes(semana, forcats::fct_reorder(comuna, final),
+                 fill=casos)) +
+      #geom_tile() +
+      geom_tile_interactive(aes(tooltip = paste("Comuna:", comuna, "\n",
+                                                "Casos nuevos:", casos, "\n",
+                                                "Semana entre el",
+                                                format(inicio_semana_epidemiologica, "%d de %B"),
+                                                "y el",
+                                                format(fin_semana_epidemiologica, "%d de %B")))) +
+      geom_text(aes(label = casos),
+                col="white",
+                size=5) +
+      #theme_minimal() +
+      tema_lineas +
+      theme(panel.grid = element_blank(),
+            axis.text.y = element_text(margin=margin(r=0)),
+            axis.text.x = element_text(angle=-90, vjust=0.5, hjust=0),
+            plot.caption = element_text(margin=margin(t=10))) +
+      ocultar_título_leyenda +
+      ocultar_titulo_y +
+      ocultar_titulo_x +
+      theme(plot.title.position = "plot",
+            plot.caption.position = "plot") +
+      scale_fill_gradient(high = "#DF1A57",
+                          low = "#f9d2de",
+                          na.value = "grey80") +
+      labs(#title="Casos nuevos por semana epidemiológica",
+           subtitle="Región metropolitana",
+           y="Comunas",
+           x="Semanas epidemiológicas",
+           caption="Fuente: Mesa de datos COVID-19, Casos nuevos por fecha de inicio de síntomas por comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
+  })
+  
+  
+  # Out ----
+  output$evolucion_casos_nuevos_int <- renderGirafe({
+    girafe(
+      ggobj = evolucion_casos_nuevos_g(),
+      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
+      height_svg = 7,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        opts_sizing(rescale = TRUE, width = .95),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
+  
+  
   # Barras casos y tasa de contagios por comuna ----
   
   # selector región
@@ -2380,6 +2454,8 @@ shinyServer(function(input, output, session) {
                       selected = "Metropolitana"
     )
   })
+  
+  
   
   # resultado de selector región
   region_g_comuna_tasa_elegida <- reactive({
