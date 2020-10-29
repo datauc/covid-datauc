@@ -748,60 +748,60 @@ visibility: hidden}")),
             
             # — ----
             #Pestaña 4,5: Análisis ----
-            tabPanel(
-              "Análisis",
-              
-              #Gráfico de burbujas por región ----
-              h3("Tasas de contagio, prevalencia y densidad de casos por comunas"),
-              p("Este gráfico y el siguiente representan cuatro variables de forma simultánea. Los puntos del gráfico corresponden a las comunas de la región elegida en el selector."),
-              p("El", strong("tamaño de los puntos"), "representa la cantidad de casos activos en cada comuna: a mayor  tamaño, mayor cantidad de casos activos."),
-              p("El", strong("color de los puntos"), "indica la densidad de casos en cada comuna: a mayor intensidad de color, mayor cantidad de casos activos de Covid-19 en relación a la superficie de la comuna en metros cuadrados, lo que indica una concentración física o cercanía de  mayor cantidad de personas contagiadas, lo que representa un aumento del riesgo de contagio."),
-              p("La", strong("posición vertical"), "de los puntos representa una mayor tasa de contagios en la comuna: mientras más arriba esté el punto significa que más han aumentado los casos en la última semana. Elporcentaje indicado para esta medida es la tasa equivalente de aumento de contagios, que representa un cálculo del porcentaje diario de aumentos a partir de la comparación de las cifras más recientes con las de 7 días antes."),
-              p("Finalmente, la", strong("posición horizontal"), "de los puntos indica la tasa de incidencia por cada 100.000 habitantes: mientras más a la derecha se ubiquen los puntos, significa que una tasa mayor de personas se encuentra activamente contagiada de acuerdo a la población de dicha comuna, por lo que ésta representa una métrica que permite comparar la cantidad de casos activos entre comunas de poblaciones distintas."),
-              br(),
-                
-              strong("Elija una región para analizar:"),
-              selectInput("selector_region_scatter",
-                          width = "70%",
-                          label = NULL,
-                          choices = NULL,
-                          selected = NULL
-              ),
-              p("Toque o pase el cursor sobre los puntos para ver sus nombres y cifras exactas"),
-              girafeOutput("grafico_scatter_comuna_int", width = "100%", height = "100%") %>%
-                withSpinner(type = 7, size = 1, color = "#fce8ef"),
-              br(),
-              
-              h3("Tasas de contagio, prevalencia y densidad de casos por regiones"),
-              p("La interpretación de este gráfico es igual a la del anterior, solo que éste representa las regiones de Chile. Entre ellas, resalta la Región metropolitana, cuya elevada cantidad de casos activos eclipsa al resto de las regiones."),
-              girafeOutput("grafico_scatter_pais_int", width = "100%", height = "100%") %>%
-                withSpinner(type = 7, size = 1, color = "#fce8ef"),
-              br(),
-              
-              #Tasas de contagio ----
-              h3("Evolución de las tasas de aumento de contagios"),
-              p("Este gráfico indica cómo van evolucionando las tasas de aumento de contagios, 
-                que refieren al porcentaje de aumento de casos diarios con respecto al día anterior. 
-                En otras palabras, una tasa de 5% en un día específico significa que dicho día se presentó un aumento de un 5% 
-                con respecto a los casos activos del día anterior. Esta medida, indicada en las barras del gráfico, 
-                es muy variable, por lo que la línea roja sobre las barras expresa un promedio móvil; 
-                es decir, el promedio de las tasas de aumento de los 7 días anteriores, lo que representa un 
-                indicador más estable y representativo de la tendencia de los aumentos de casos de Covid-19 en el país."),
-              girafeOutput("tasa_contagio_int", width = "100%", height = "100%") %>%
-                withSpinner(type = 7, size = 1, color = "#fce8ef"),
-              br(),
-              
-              #Comparativa recuperados y nuevos ----
-              h3("Comparación de la evolución de casos nuevos y casos recuperados"),
-              p("Este gráfico pone en comparación las cifras de casos nuevos de Covid-19 a nivel nacional (en rojo) y las cifras
-              de casos catalogados como 'recuperados' por el Ministerio de Salud. Se destaca en este gráfico un punto rojizo,
-              que demarca el único momento en que los casos recuperados diarios superaron a los casos nuevos. Sin embargo, los datos
-              indican que dicha instancia,lejos de ser indicativa de un cambio de escenarios, no se mantuvo en el tiempo."),
-              girafeOutput("recuperados_activos_int", width = "100%", height = "100%") %>%
-                withSpinner(type = 7, size = 1, color = "#fce8ef"),
-              br(),
-              
-            ),
+            # tabPanel(
+            #   "Análisis",
+            #   
+            #   #Gráfico de burbujas por región ----
+            #   h3("Tasas de contagio, prevalencia y densidad de casos por comunas"),
+            #   p("Este gráfico y el siguiente representan cuatro variables de forma simultánea. Los puntos del gráfico corresponden a las comunas de la región elegida en el selector."),
+            #   p("El", strong("tamaño de los puntos"), "representa la cantidad de casos activos en cada comuna: a mayor  tamaño, mayor cantidad de casos activos."),
+            #   p("El", strong("color de los puntos"), "indica la densidad de casos en cada comuna: a mayor intensidad de color, mayor cantidad de casos activos de Covid-19 en relación a la superficie de la comuna en metros cuadrados, lo que indica una concentración física o cercanía de  mayor cantidad de personas contagiadas, lo que representa un aumento del riesgo de contagio."),
+            #   p("La", strong("posición vertical"), "de los puntos representa una mayor tasa de contagios en la comuna: mientras más arriba esté el punto significa que más han aumentado los casos en la última semana. Elporcentaje indicado para esta medida es la tasa equivalente de aumento de contagios, que representa un cálculo del porcentaje diario de aumentos a partir de la comparación de las cifras más recientes con las de 7 días antes."),
+            #   p("Finalmente, la", strong("posición horizontal"), "de los puntos indica la tasa de incidencia por cada 100.000 habitantes: mientras más a la derecha se ubiquen los puntos, significa que una tasa mayor de personas se encuentra activamente contagiada de acuerdo a la población de dicha comuna, por lo que ésta representa una métrica que permite comparar la cantidad de casos activos entre comunas de poblaciones distintas."),
+            #   br(),
+            #     
+            #   strong("Elija una región para analizar:"),
+            #   selectInput("selector_region_scatter",
+            #               width = "70%",
+            #               label = NULL,
+            #               choices = NULL,
+            #               selected = NULL
+            #   ),
+            #   p("Toque o pase el cursor sobre los puntos para ver sus nombres y cifras exactas"),
+            #   girafeOutput("grafico_scatter_comuna_int", width = "100%", height = "100%") %>%
+            #     withSpinner(type = 7, size = 1, color = "#fce8ef"),
+            #   br(),
+            #   
+            #   h3("Tasas de contagio, prevalencia y densidad de casos por regiones"),
+            #   p("La interpretación de este gráfico es igual a la del anterior, solo que éste representa las regiones de Chile. Entre ellas, resalta la Región metropolitana, cuya elevada cantidad de casos activos eclipsa al resto de las regiones."),
+            #   girafeOutput("grafico_scatter_pais_int", width = "100%", height = "100%") %>%
+            #     withSpinner(type = 7, size = 1, color = "#fce8ef"),
+            #   br(),
+            #   
+            #   #Tasas de contagio ----
+            #   h3("Evolución de las tasas de aumento de contagios"),
+            #   p("Este gráfico indica cómo van evolucionando las tasas de aumento de contagios, 
+            #     que refieren al porcentaje de aumento de casos diarios con respecto al día anterior. 
+            #     En otras palabras, una tasa de 5% en un día específico significa que dicho día se presentó un aumento de un 5% 
+            #     con respecto a los casos activos del día anterior. Esta medida, indicada en las barras del gráfico, 
+            #     es muy variable, por lo que la línea roja sobre las barras expresa un promedio móvil; 
+            #     es decir, el promedio de las tasas de aumento de los 7 días anteriores, lo que representa un 
+            #     indicador más estable y representativo de la tendencia de los aumentos de casos de Covid-19 en el país."),
+            #   girafeOutput("tasa_contagio_int", width = "100%", height = "100%") %>%
+            #     withSpinner(type = 7, size = 1, color = "#fce8ef"),
+            #   br(),
+            #   
+            #   #Comparativa recuperados y nuevos ----
+            #   h3("Comparación de la evolución de casos nuevos y casos recuperados"),
+            #   p("Este gráfico pone en comparación las cifras de casos nuevos de Covid-19 a nivel nacional (en rojo) y las cifras
+            #   de casos catalogados como 'recuperados' por el Ministerio de Salud. Se destaca en este gráfico un punto rojizo,
+            #   que demarca el único momento en que los casos recuperados diarios superaron a los casos nuevos. Sin embargo, los datos
+            #   indican que dicha instancia,lejos de ser indicativa de un cambio de escenarios, no se mantuvo en el tiempo."),
+            #   girafeOutput("recuperados_activos_int", width = "100%", height = "100%") %>%
+            #     withSpinner(type = 7, size = 1, color = "#fce8ef"),
+            #   br(),
+            #   
+            # ),
             
             #— ----
             # Pestaña 5: Mapas ----
@@ -953,15 +953,15 @@ Todos los datos son obtenidos en tiempo real de los repositorios de la Mesa de D
               style = "color: #df1a57;"
             ),
           ),
-          # #div(style = "display: inline-block;", em("Desarrollo: ")),
-          # div(
-          #   style = "display: inline-block;",
-          #   tags$a(
-          #     href = "https://pacha.dev",
-          #     "Mauricio Vargas Sepúlveda",
-          #     style = "color: #df1a57;"
-          #   ),
-          # ),
+          #div(style = "display: inline-block;", em("Desarrollo: ")),
+          div(
+            style = "display: inline-block;",
+            tags$a(
+              href = "https://pacha.dev",
+              "Mauricio Vargas Sepúlveda",
+              style = "color: #df1a57;"
+            ),
+          ),
           br(),
           div(style = "display: inline-block;", em("Supervisión metodológica: ")),
           div(
