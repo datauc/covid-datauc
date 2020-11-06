@@ -4,6 +4,8 @@ shinyServer(function(input, output, session) {
   Sys.setlocale(category = "LC_TIME", locale = "es_ES.UTF-8") # Meses en español
   options(shiny.sanitize.errors = FALSE)
   
+  options(warn = -1)
+  
   #session$onSessionEnded(stopApp)
   
   
@@ -159,9 +161,9 @@ shinyServer(function(input, output, session) {
   
   
   #Casos activos por comuna ----
-  casos_activos_comuna <- reactive({
-    readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna") #19
-  })
+  # casos_activos_comuna <- reactive({
+  #   readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna") #19
+  # })
   
   
   #— ----

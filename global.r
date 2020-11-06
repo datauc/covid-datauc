@@ -36,6 +36,8 @@ casos_genero_edad <- readr::read_csv("http://localhost:8080/casos_genero_grupo_e
 
 casos_totales_comuna <- readr::read_csv("http://localhost:8080/casos_totales_comuna") #2 
 
+casos_activos_comuna <- readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna") #19
+
 activos_comuna <- readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna") # 19
 
 # Funciones para evitar repeticion ----------------------------------------
