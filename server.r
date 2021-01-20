@@ -247,7 +247,8 @@ shinyServer(function(input, output, session) {
   casos_activos_ultimo <- reactive({
     covid_totales %>%
       filter(fecha == max(fecha)) %>%
-      filter(categoria == "Casos activos") %>%
+      #filter(categoria == "Casos activos") %>%
+      filter(categoria == "Casos activos confirmados") %>% #arreglo 20/01/21
       summarize(casos = casos)
   })
   output$casos_activos_ultimo <- renderText({
@@ -529,10 +530,11 @@ shinyServer(function(input, output, session) {
   
   
   
-  #Nuevos comuna ----
+  #Nuevos comuna !!!!!!!!!!!!!!!!!!----
   tabla_nuevos_comuna <- reactive({
     
     nuevos_comuna() %>%
+    #nuevos_comuna %>%
       select(semana_epidemiologica, inicio_semana_epidemiologica, fin_semana_epidemiologica,
              region, comuna, poblacion, casos)%>%
       rename(semana=1,
@@ -543,6 +545,7 @@ shinyServer(function(input, output, session) {
         "-",
         format(fin, "%d/%b")
       )) %>%
+      filter(!is.na(fin)) %>%
       filter(fin!=max(fin)) %>%
       filter(fin==max(fin)) %>%
       mutate(tasa = round((casos / poblacion) * 100000, digits = 1)) %>%
@@ -757,7 +760,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$tabla_casos_activos_comuna <- renderFormattable({
-    tabla_casos_activos_comuna
+    tabla_casos_activos_comuna()
   })
   
   #Descarga
