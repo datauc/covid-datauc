@@ -1714,7 +1714,7 @@ shinyServer(function(input, output, session) {
   
   
   
-  # Casos nuevos por comuna ----
+  # Casos nuevos por comuna !!!! ----
   # Casos nuevos por fecha de inicio de síntomas por comuna
   
   # primer selector: región
@@ -1724,18 +1724,18 @@ shinyServer(function(input, output, session) {
                       selected = "Metropolitana"
     )
   })
-  # resultado de selector región
-  region_nuevos_comuna_elegida <- reactive({
-    req(input$selector_region_nuevos_comuna)
-    
-    input$selector_region_nuevos_comuna
-  })
-  
+  # # resultado de selector región
+  # region_nuevos_comuna_elegida <- reactive({
+  #   req(input$selector_region_nuevos_comuna)
+  #   
+  #   input$selector_region_nuevos_comuna
+  # })
+  # 
   # filtrar datos con la región elegida
   nuevos_comuna1 <- reactive({
     nuevos_comuna() %>%
       select(-starts_with("codigo")) %>%
-      filter(region == region_nuevos_comuna_elegida()) %>%
+      filter(region == input$selector_region_nuevos_comuna) %>%
       droplevels()
   })
   
@@ -1748,19 +1748,20 @@ shinyServer(function(input, output, session) {
     )
   })
   
-  # resultado segundo selector: comuna
-  comuna_nuevos_comuna_elegida <- reactive({
-    req(input$selector_comuna_nuevos_comuna)
-    
-    input$selector_comuna_nuevos_comuna
-  })
+  # # resultado segundo selector: comuna
+  # comuna_nuevos_comuna_elegida <- reactive({
+  #   req(input$selector_comuna_nuevos_comuna)
+  #   
+  #   input$selector_comuna_nuevos_comuna
+  # })
   
   # filtrar datos con la comuna elegida
   nuevos_comuna2 <- reactive({
     req(nuevos_comuna1(), input$selector_region_nuevos_comuna)
     
     nuevos_comuna1() %>%
-      filter(comuna == comuna_nuevos_comuna_elegida()) %>%
+      filter(comuna == input$selector_comuna_nuevos_comuna) %>%
+      filter(!is.na(fin_semana_epidemiologica)) %>%
       group_by(semana_epidemiologica) %>%
       mutate(etiqueta = paste0(
         format(inicio_semana_epidemiologica, "%d/%b"),
@@ -1771,11 +1772,11 @@ shinyServer(function(input, output, session) {
   
   #graficar
   nuevos_comuna_g <- reactive({ # grafico
-    req(
-      nuevos_comuna1(), nuevos_comuna2(),
-      input$selector_region_nuevos_comuna,
-      input$selector_comuna_nuevos_comuna
-    )
+    # req(
+    #   nuevos_comuna1(), nuevos_comuna2(),
+    #   input$selector_region_nuevos_comuna,
+    #   input$selector_comuna_nuevos_comuna
+    # )
     
     p <- nuevos_comuna2() %>%
       ungroup() %>%
