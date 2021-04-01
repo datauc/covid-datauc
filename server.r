@@ -7,7 +7,111 @@ shinyServer(function(input, output, session) {
   options(warn = -1)
   
   #session$onSessionEnded(stopApp)
+  #Datos ----
   
+  covid_totales <- readr::read_csv("http://localhost:8080/totales_nacionales_diarios") # 5
+  
+  covid_region <- readr::read_csv("http://localhost:8080/casos_totales_region_incremental") %>% # 3
+    mutate(region = forcats::fct_relevel(region, "Total", after = 0))
+  
+  covid_comuna <- readr::read_csv("http://localhost:8080/casos_totales_comuna_incremental") # 1
+  
+  covid_hospitalizados <- readr::read_csv("http://localhost:8080/pacientes_uci_region") #8
+  
+  casos_genero_edad <- readr::read_csv("http://localhost:8080/casos_genero_grupo_edad") %>% # 16
+    mutate_if(is.character, as.factor)
+  
+  casos_totales_comuna <- readr::read_csv("http://localhost:8080/casos_totales_comuna") #2 
+  
+  casos_activos_comuna <- readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna") #19
+  
+  activos_comuna <- readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna") # 19
+  
+  #----
+  #----
+  # Población de las regiones (Censo 2017) ----
+  
+  region <- c("Aysén", "Magallanes", "Arica y Parinacota", "Atacama", "Tarapacá", "Los Ríos", "Ñuble", "Antofagasta", "Coquimbo", "Araucanía", "O’Higgins", "Metropolitana", "Valparaíso", "Biobío", "Maule", "Los Lagos")
+  poblacion <- c(103158, 166533, 226068, 286168, 330558, 384837, 480609, 607534, 757586, 957224, 914555, 7112808, 1815902, 1556805, 1044950, 828708)
+  poblaciones <- data.frame(region, poblacion)
+  
+  # Funciones para evitar repeticion ----------------------------------------
+  
+  f_total <- function() {
+      covid_region %>%
+          filter(region == region_elegida()) %>%
+          na.omit() %>%
+          filter(fecha >= lubridate::ymd("2020-03-22"))
+  }
+  
+  f_hospitalizados <- function() {
+      covid_hospitalizados %>%
+          filter(region != "Metropolitana") %>%
+          mutate(region = recode(region,
+                                 "Tarapaca" = "Tarapacá",
+                                 "Arica y Parinacota" = "Arica",
+                                 "Nuble" = "Ñuble",
+                                 "Del Libertador General Bernardo O’Higgins" = "O'Higgins",
+                                 "Magallanes y la Antartica" = "Magallanes")) %>%
+          group_by(region)
+  }
+  
+  f_letalidad <- function() {
+      covid_totales %>%
+          filter(categoria == "Casos totales" | categoria == "Fallecidos") %>%
+          tidyr::pivot_wider(id_cols = fecha, names_from = categoria, values_from = casos) %>%
+          rename(Activos = 2) %>%
+          mutate(Tasa = Fallecidos / Activos) %>%
+          filter(Fallecidos != 0)
+  }
+  
+  f_totales_nacionales <- function() {
+      covid_totales %>%
+          na.omit() %>%
+          mutate(categoria = stringr::str_remove(categoria, "Casos ")) %>%
+          group_by(categoria) %>%
+          mutate(final = casos[fecha == max(fecha)])
+  }
+  
+  f_casos_genero_edad <- function() {
+      casos_genero_edad %>%
+          #Recodificación sugerida por Gregorio
+          mutate(grupo_de_edad = recode(grupo_de_edad,
+                                        "00 - 04 años" = "0 - 19 años",
+                                        "05 - 09 años" = "0 - 19 años",
+                                        "10 - 14 años" = "0 - 19 años", 
+                                        "15 - 19 años" = "0 - 19 años", 
+                                        "20 - 24 años" = "20 - 39 años", #
+                                        "25 - 29 años" = "20 - 39 años",  
+                                        "30 - 34 años" = "20 - 39 años",
+                                        "35 - 39 años" = "20 - 39 años",
+                                        "40 - 44 años" = "40 - 59 años", #
+                                        "45 - 49 años" = "40 - 59 años",
+                                        "50 - 54 años" = "40 - 59 años",
+                                        "55 - 59 años" = "40 - 59 años", #
+                                        "60 - 64 años" = "60 años y más",
+                                        "65 - 69 años" = "60 años y más",
+                                        "70 - 74 años" = "60 años y más",
+                                        "75 - 79 años" = "60 años y más", 
+                                        "80 y más años" = "60 años y más")) %>%
+          mutate(sexo = recode(sexo,
+                               "M" = "Hombres",
+                               "F" = "Mujeres")) %>%
+          mutate(grupo_de_edad = stringr::str_replace(grupo_de_edad, " - ", "-"),
+                 grupo_de_edad = stringr::str_replace(grupo_de_edad, " y más", " +")) %>%
+          group_by(fecha, sexo, grupo_de_edad) %>%
+          summarize(casos = sum(casos)) %>%
+          na.omit() %>%
+          group_by(fecha, grupo_de_edad) %>%
+          mutate(final = casos[fecha == max(fecha)]) %>%
+          ungroup() %>%
+          mutate(grupo_de_edad = forcats::fct_reorder(grupo_de_edad, final))
+  }
+  
+  
+  
+  #----
+  #----
   
   # Datos por región ----
   # covid_region <- reactive({
@@ -428,7 +532,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$regiones_ranking_xlsx <- downloadHandler(
-    filename = "regiones_ranking.xlsx",
+    filename = "regiones_ranking_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(covid_region %>%
                             filter(region != "Total") %>%
@@ -506,7 +610,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$comunas_ranking_xlsx <- downloadHandler(
-    filename = "comunas_ranking.xlsx",
+    filename = "comunas_ranking_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(covid_comuna %>%
                             filter(fecha == max(fecha)) %>%
@@ -575,7 +679,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$comunas_nuevos_ranking_xlsx <- downloadHandler(
-    filename = "comunas_nuevos_ranking.xlsx",
+    filename = "comunas_nuevos_ranking_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(nuevos_comuna() %>%
                             select(semana_epidemiologica, inicio_semana_epidemiologica, fin_semana_epidemiologica,
@@ -693,7 +797,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$comunas_aumento_ranking_xlsx <- downloadHandler(
-    filename = "comunas_aumento_ranking.xlsx",
+    filename = "comunas_aumento_ranking_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(casos_totales_comuna %>%
                             select(fecha, region, comuna, poblacion, casos_confirmados) %>%
@@ -765,7 +869,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$comunas_activos_tabla_xlsx <- downloadHandler(
-    filename = "comunas_activos_tabla.xlsx",
+    filename = "comunas_activos_tabla_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(casos_activos_comuna %>% 
                             select(fecha, region, comuna, casos, poblacion) %>%
@@ -895,7 +999,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$regiones_xlsx <- downloadHandler(
-    filename = "covid_region.xlsx",
+    filename = "covid_region_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(covid_region, filename)
     },
@@ -993,7 +1097,7 @@ shinyServer(function(input, output, session) {
   # })
   # #Descarga
   # output$g_total_xlsx <- downloadHandler(
-  #   filename = "total.xlsx",
+  #   filename = "total_DataUC.xlsx",
   #   content = function(filename) {
   #     writexl::write_xlsx(f_total(), filename)
   #   },
@@ -1102,7 +1206,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$regiones_acumulado_xlsx <- downloadHandler(
-    filename = "covid_region.xlsx",
+    filename = "covid_region_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(covid_region, filename)
     },
@@ -1201,7 +1305,7 @@ shinyServer(function(input, output, session) {
   })
   #Descarga
   output$regiones_nuevos_xlsx <- downloadHandler(
-    filename = "reg_nuevos.xlsx",
+    filename = "reg_nuevos_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(covid_region_nuevos(), filename)
     },
@@ -1332,7 +1436,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$regiones_examenes_xlsx <- downloadHandler(
-    filename = "regiones_examenes.xlsx",
+    filename = "regiones_examenes_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(covid_examenes(), filename)
     },
@@ -1434,7 +1538,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$regiones_fallecidos_xlsx <- downloadHandler(
-    filename = "regiones_fallecidos.xlsx",
+    filename = "regiones_fallecidos_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(covid_fallecidos_region(), filename)
     },
@@ -1548,7 +1652,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$fallecidos_region_inc_xlsx <- downloadHandler(
-    filename = "fallecidos_region_incremental.xlsx",
+    filename = "fallecidos_region_incremental_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(fallecidos_region(), filename)
     },
@@ -1561,7 +1665,7 @@ shinyServer(function(input, output, session) {
   # Pestaña 3: COMUNAS ----
   
   
-  #Gráfico general de comunas ----
+  # Gráfico general de comunas ----
   
   # selector región
   observe({
@@ -1705,7 +1809,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$grafico_comunas_xlsx <- downloadHandler(
-    filename = "grafico_comunas.xlsx",
+    filename = "grafico_comunas_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(g_comuna_pre_pre(), filename)
     },
@@ -1860,7 +1964,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$covid_nuevos_comuna_xlsx <- downloadHandler(
-    filename = "covid_nuevos_comuna.xlsx",
+    filename = "casos_nuevos_comuna_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(nuevos_comuna2(), filename)
     },
@@ -2025,7 +2129,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$casos_activos_comuna_xlsx <- downloadHandler(
-    filename = "casos_activos_comuna.xlsx",
+    filename = "casos_activos_comuna_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(activos_comuna2(), filename)
     },
@@ -2218,7 +2322,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$rank_casos_tasa_comuna_xlsx <- downloadHandler(
-    filename = "rank_casos_tasa_comunas.xlsx",
+    filename = "rank_casos_tasa_comunas_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(g_comuna_tasa_pre() %>%
                             filter(fecha == max(fecha)) %>%
@@ -2329,7 +2433,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$rank_casos_comuna_xlsx <- downloadHandler(
-    filename = "rank_casos_comunas.xlsx",
+    filename = "rank_casos_comunas_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(covid_comuna %>%
                             filter(fecha == max(fecha)) %>%
@@ -2441,7 +2545,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$comuna_tasa_ranking_xlsx <- downloadHandler(
-    filename = "comuna_tasa_ranking.xlsx",
+    filename = "comuna_tasa_ranking_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(covid_comuna %>%
                             filter(fecha == max(fecha)) %>%
@@ -2526,7 +2630,7 @@ shinyServer(function(input, output, session) {
         angle = 45, vjust = 1, hjust = 1,
         margin = margin(t = 0, b = 2))) +
       ocultar_titulo_x +
-      labs(subtitle = paste("Casos entre el", format(min(covid_totales$fecha), "%d de %B"), "y el", format(max(covid_totales$fecha), "%d de %B")),
+      labs(subtitle = paste("Casos entre el", format(min(covid_totales$fecha), "%d de %B del %Y"), "y el", format(max(covid_totales$fecha), "%d de %B del %Y")),
            caption = "Mesa de datos Covid-19, casos totales nacionales diarios\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
            y = "Cantidad de casos")
     
@@ -2551,14 +2655,14 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$g_totales_nacionales_xlsx <- downloadHandler(
-    filename = "totales_nacionales.xlsx",
+    filename = "totales_nacionales_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(f_totales_nacionales(), filename)
     },
     contentType = "application/xlsx"
   )
   
-  #Casos activos ----
+  # Casos activos ----
   
   casos_activos_g <- reactive({
     #req(covid_totales)
@@ -2605,7 +2709,7 @@ shinyServer(function(input, output, session) {
       )) +
       ocultar_titulo_x +
       labs(
-        subtitle = paste("Casos activos entre el", format(min(covid_totales$fecha), "%d de %B"), "y el", format(max(covid_totales$fecha), "%d de %B")),
+        subtitle = paste("Casos activos entre el", format(min(covid_totales$fecha), "%d de %B del %Y"), "y el", format(max(covid_totales$fecha), "%d de %B del %Y")),
         caption = "Mesa de datos Covid-19, casos totales nacionales diarios\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
         y = "Cantidad de casos activos"
       )
@@ -2631,9 +2735,9 @@ shinyServer(function(input, output, session) {
   })
   
   
-  #Descarga----
+  # Descarga----
   output$casos_activos_total_xlsx <- downloadHandler(
-    filename = "activos_totales_nacionales.xlsx",
+    filename = "activos_totales_nacionales_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(f_totales_nacionales() %>% filter(categoria == "activos"), filename)
     },
@@ -2709,7 +2813,7 @@ shinyServer(function(input, output, session) {
   })
   #Descarga
   output$g_total_nuevos_xlsx <- downloadHandler(
-    filename = "reg_nuevos.xlsx",
+    filename = "reg_nuevos_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(covid_region_nuevos() %>% filter(region=="Total"), filename)
     },
@@ -2782,7 +2886,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$casos_genero_edad_xlsx <- downloadHandler(
-    filename = "casos_genero_edad.xlsx",
+    filename = "casos_genero_edad_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(f_casos_genero_edad(), filename)
     },
@@ -2790,7 +2894,7 @@ shinyServer(function(input, output, session) {
   )
   
   
-  #Fallecidos totales ----
+  # Fallecidos totales ----
   
   fallecidos_total_g <- reactive({
     #req(covid_totales)
@@ -2855,7 +2959,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$g_fallecidos_total_xlsx <- downloadHandler(
-    filename = "fallecidos_totales_nacionales.xlsx",
+    filename = "fallecidos_totales_nacionales_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(f_totales_nacionales() %>% filter(categoria == "Fallecidos"), filename)
     },
@@ -3025,7 +3129,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$g_hospitalizados_xlsx <- downloadHandler(
-    filename = "hospitalizados.xlsx",
+    filename = "hospitalizados_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(f_hospitalizados(), filename)
     },
@@ -3050,7 +3154,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$g_fallecidos_xlsx <- downloadHandler(
-    filename = "fallecidos.xlsx",
+    filename = "fallecidos_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(covid_fallecidos() %>% na.omit(), filename)
     },
@@ -3075,7 +3179,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$g_letalidad_xlsx <- downloadHandler(
-    filename = "letalidad.xlsx",
+    filename = "letalidad_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(f_letalidad() %>% janitor::clean_names(), filename)
     },
@@ -3215,7 +3319,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$ventiladores_xlsx <- downloadHandler(
-    filename = "ventiladores.xlsx",
+    filename = "ventiladores_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(ventiladores() %>%
                             filter(ventiladores != "total") %>%
@@ -3309,7 +3413,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$pacientes_criticos_xlsx <- downloadHandler(
-    filename = "pacientes_criticos.xlsx",
+    filename = "pacientes_criticos_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(pacientes_criticos(), filename)
     },
@@ -3405,7 +3509,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$hosp_integrado_xlsx <- downloadHandler(
-    filename = "hosp_integrado.xlsx",
+    filename = "hosp_integrado_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(hosp_integrado(), filename)
     },
@@ -3500,7 +3604,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$hosp_edad_total_xlsx <- downloadHandler(
-    filename = "hosp_edad_total.xlsx",
+    filename = "hosp_edad_total_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(hosp_edad_total() %>%
                             mutate(
@@ -3627,7 +3731,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$hosp_edad_uci_xlsx <- downloadHandler(
-    filename = "hosp_edad_uci.xlsx",
+    filename = "hosp_edad_uci_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(hosp_edad_uci() %>%
                             mutate(
@@ -3717,7 +3821,7 @@ shinyServer(function(input, output, session) {
   
   #Descarga
   output$uci_edad_xlsx <- downloadHandler(
-    filename = "uci_edad.xlsx",
+    filename = "uci_edad_DataUC.xlsx",
     content = function(filename) {
       writexl::write_xlsx(uci_edad() %>%
                             mutate(

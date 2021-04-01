@@ -14,112 +14,88 @@ options(scipen=9999)
 
 
 
-# Población de las regiones (Censo 2017) ----
-
-region <- c("Aysén", "Magallanes", "Arica y Parinacota", "Atacama", "Tarapacá", "Los Ríos", "Ñuble", "Antofagasta", "Coquimbo", "Araucanía", "O’Higgins", "Metropolitana", "Valparaíso", "Biobío", "Maule", "Los Lagos")
-poblacion <- c(103158, 166533, 226068, 286168, 330558, 384837, 480609, 607534, 757586, 957224, 914555, 7112808, 1815902, 1556805, 1044950, 828708)
-poblaciones <- data.frame(region, poblacion)
-
-
-# Datos global ----
-covid_totales <- readr::read_csv("http://localhost:8080/totales_nacionales_diarios") # 5
-
-covid_region <- readr::read_csv("http://localhost:8080/casos_totales_region_incremental") %>% # 3
-    mutate(region = forcats::fct_relevel(region, "Total", after = 0))
-
-covid_comuna <- readr::read_csv("http://localhost:8080/casos_totales_comuna_incremental") # 1
-
-covid_hospitalizados <- readr::read_csv("http://localhost:8080/pacientes_uci_region") #8
-
-casos_genero_edad <- readr::read_csv("http://localhost:8080/casos_genero_grupo_edad") %>% # 16
-    mutate_if(is.character, as.factor)
-
-casos_totales_comuna <- readr::read_csv("http://localhost:8080/casos_totales_comuna") #2 
-
-casos_activos_comuna <- readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna") #19
-
-activos_comuna <- readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna") # 19
-
-# Funciones para evitar repeticion ----------------------------------------
-
-f_total <- function() {
-    covid_region %>%
-        filter(region == region_elegida()) %>%
-        na.omit() %>%
-        filter(fecha >= lubridate::ymd("2020-03-22"))
-}
-
-
-
-f_hospitalizados <- function() {
-    covid_hospitalizados %>%
-        filter(region != "Metropolitana") %>%
-        mutate(region = recode(region,
-                               "Tarapaca" = "Tarapacá",
-                               "Arica y Parinacota" = "Arica",
-                               "Nuble" = "Ñuble",
-                               "Del Libertador General Bernardo O’Higgins" = "O'Higgins",
-                               "Magallanes y la Antartica" = "Magallanes")) %>%
-        group_by(region)
-}
-
-f_letalidad <- function() {
-    covid_totales %>%
-        filter(categoria == "Casos totales" | categoria == "Fallecidos") %>%
-        tidyr::pivot_wider(id_cols = fecha, names_from = categoria, values_from = casos) %>%
-        rename(Activos = 2) %>%
-        mutate(Tasa = Fallecidos / Activos) %>%
-        filter(Fallecidos != 0)
-}
-
-f_totales_nacionales <- function() {
-    covid_totales %>%
-        na.omit() %>%
-        mutate(categoria = stringr::str_remove(categoria, "Casos ")) %>%
-        group_by(categoria) %>%
-        mutate(final = casos[fecha == max(fecha)])
-}
-
-
-f_casos_genero_edad <- function() {
-    casos_genero_edad %>%
-    #Recodificación sugerida por Gregorio
-    mutate(grupo_de_edad = recode(grupo_de_edad,
-                                  "00 - 04 años" = "0 - 19 años",
-                                  "05 - 09 años" = "0 - 19 años",
-                                  "10 - 14 años" = "0 - 19 años", 
-                                  "15 - 19 años" = "0 - 19 años", 
-                                  "20 - 24 años" = "20 - 39 años", #
-                                  "25 - 29 años" = "20 - 39 años",  
-                                  "30 - 34 años" = "20 - 39 años",
-                                  "35 - 39 años" = "20 - 39 años",
-                                  "40 - 44 años" = "40 - 59 años", #
-                                  "45 - 49 años" = "40 - 59 años",
-                                  "50 - 54 años" = "40 - 59 años",
-                                  "55 - 59 años" = "40 - 59 años", #
-                                  "60 - 64 años" = "60 años y más",
-                                  "65 - 69 años" = "60 años y más",
-                                  "70 - 74 años" = "60 años y más",
-                                  "75 - 79 años" = "60 años y más", 
-                                  "80 y más años" = "60 años y más")) %>%
-        mutate(sexo = recode(sexo,
-                             "M" = "Hombres",
-                             "F" = "Mujeres")) %>%
-        mutate(grupo_de_edad = stringr::str_replace(grupo_de_edad, " - ", "-"),
-            grupo_de_edad = stringr::str_replace(grupo_de_edad, " y más", " +")) %>%
-        group_by(fecha, sexo, grupo_de_edad) %>%
-        summarize(casos = sum(casos)) %>%
-        na.omit() %>%
-        group_by(fecha, grupo_de_edad) %>%
-        mutate(final = casos[fecha == max(fecha)]) %>%
-        ungroup() %>%
-        mutate(grupo_de_edad = forcats::fct_reorder(grupo_de_edad, final))
-}
-
-
-
-
-# — ----
+# # Población de las regiones (Censo 2017) ----
+# 
+# region <- c("Aysén", "Magallanes", "Arica y Parinacota", "Atacama", "Tarapacá", "Los Ríos", "Ñuble", "Antofagasta", "Coquimbo", "Araucanía", "O’Higgins", "Metropolitana", "Valparaíso", "Biobío", "Maule", "Los Lagos")
+# poblacion <- c(103158, 166533, 226068, 286168, 330558, 384837, 480609, 607534, 757586, 957224, 914555, 7112808, 1815902, 1556805, 1044950, 828708)
+# poblaciones <- data.frame(region, poblacion)
+# 
+# # Funciones para evitar repeticion ----------------------------------------
+# 
+# f_total <- function() {
+#     covid_region %>%
+#         filter(region == region_elegida()) %>%
+#         na.omit() %>%
+#         filter(fecha >= lubridate::ymd("2020-03-22"))
+# }
+# 
+# f_hospitalizados <- function() {
+#     covid_hospitalizados %>%
+#         filter(region != "Metropolitana") %>%
+#         mutate(region = recode(region,
+#                                "Tarapaca" = "Tarapacá",
+#                                "Arica y Parinacota" = "Arica",
+#                                "Nuble" = "Ñuble",
+#                                "Del Libertador General Bernardo O’Higgins" = "O'Higgins",
+#                                "Magallanes y la Antartica" = "Magallanes")) %>%
+#         group_by(region)
+# }
+# 
+# f_letalidad <- function() {
+#     covid_totales %>%
+#         filter(categoria == "Casos totales" | categoria == "Fallecidos") %>%
+#         tidyr::pivot_wider(id_cols = fecha, names_from = categoria, values_from = casos) %>%
+#         rename(Activos = 2) %>%
+#         mutate(Tasa = Fallecidos / Activos) %>%
+#         filter(Fallecidos != 0)
+# }
+# 
+# f_totales_nacionales <- function() {
+#     covid_totales %>%
+#         na.omit() %>%
+#         mutate(categoria = stringr::str_remove(categoria, "Casos ")) %>%
+#         group_by(categoria) %>%
+#         mutate(final = casos[fecha == max(fecha)])
+# }
+# 
+# f_casos_genero_edad <- function() {
+#     casos_genero_edad %>%
+#     #Recodificación sugerida por Gregorio
+#     mutate(grupo_de_edad = recode(grupo_de_edad,
+#                                   "00 - 04 años" = "0 - 19 años",
+#                                   "05 - 09 años" = "0 - 19 años",
+#                                   "10 - 14 años" = "0 - 19 años", 
+#                                   "15 - 19 años" = "0 - 19 años", 
+#                                   "20 - 24 años" = "20 - 39 años", #
+#                                   "25 - 29 años" = "20 - 39 años",  
+#                                   "30 - 34 años" = "20 - 39 años",
+#                                   "35 - 39 años" = "20 - 39 años",
+#                                   "40 - 44 años" = "40 - 59 años", #
+#                                   "45 - 49 años" = "40 - 59 años",
+#                                   "50 - 54 años" = "40 - 59 años",
+#                                   "55 - 59 años" = "40 - 59 años", #
+#                                   "60 - 64 años" = "60 años y más",
+#                                   "65 - 69 años" = "60 años y más",
+#                                   "70 - 74 años" = "60 años y más",
+#                                   "75 - 79 años" = "60 años y más", 
+#                                   "80 y más años" = "60 años y más")) %>%
+#         mutate(sexo = recode(sexo,
+#                              "M" = "Hombres",
+#                              "F" = "Mujeres")) %>%
+#         mutate(grupo_de_edad = stringr::str_replace(grupo_de_edad, " - ", "-"),
+#             grupo_de_edad = stringr::str_replace(grupo_de_edad, " y más", " +")) %>%
+#         group_by(fecha, sexo, grupo_de_edad) %>%
+#         summarize(casos = sum(casos)) %>%
+#         na.omit() %>%
+#         group_by(fecha, grupo_de_edad) %>%
+#         mutate(final = casos[fecha == max(fecha)]) %>%
+#         ungroup() %>%
+#         mutate(grupo_de_edad = forcats::fct_reorder(grupo_de_edad, final))
+# }
+# 
+# 
+# 
+# # — ----
 
 
 
