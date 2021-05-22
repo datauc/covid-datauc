@@ -37,7 +37,7 @@ La plataforma fue desarrollada utilizando el software R y su aplicación de visu
 
 
 ## Equipo realizador
-**Desarrollo de gráficos e interfaz:** [Bastián Olea Herrera](http://bastian.olea.biz)
+**Desarrollo de gráficos e interfaz:** [Bastián Olea Herrera](http://bastian.olea.biz) @bastimapache
                   
 **Desarrollo de backend:** [Mauricio Vargas Sepúlveda](https://pacha.dev)
 
