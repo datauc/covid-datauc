@@ -158,7 +158,7 @@ shinyServer(function(input, output, session) {
       readr::read_csv("http://localhost:8080/casos_nuevos_sintomas_comuna", col_types = readr::cols()) # 15
   }) %>% bindCache(Sys.Date())
   
-  # Casos activos por fecha de inicio de síntomas y comuna ----
+  # Casos activos por fecha de inicio de síntomas y comuna
   # activos_comuna() <- reactive({
   #   covid_act_comuna <-
   #     readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna") # 19
@@ -209,11 +209,11 @@ shinyServer(function(input, output, session) {
     # )
   }) %>% bindCache(Sys.Date())
   
-  # Fallecidos por región incremental ----
-  fallecidos_region <- reactive({
-    fallecidos_region <-
-      readr::read_csv("http://localhost:8080/fallecidos_region_incremental", col_types = readr::cols()) # 14
-  }) %>% bindCache(Sys.Date())
+  # # Fallecidos por región incremental
+  # fallecidos_region <- reactive({
+  #   fallecidos_region <-
+  #     readr::read_csv("http://localhost:8080/fallecidos_region_incremental", col_types = readr::cols()) # 14
+  # }) %>% bindCache(Sys.Date())
   
   # Exámenes PCR ----
   
@@ -2187,7 +2187,7 @@ shinyServer(function(input, output, session) {
   # Fallecidos por región incremental ----
   
   fallecidos_region_g <- reactive({ # grafico
-    p <- fallecidos_region() %>%
+    p <- covid_fallecidos_region() %>%
       filter(region != "Total")
     
     if (input$regiones_fallecidos_g_excl_rm=="si") {
@@ -2231,8 +2231,8 @@ shinyServer(function(input, output, session) {
       ) +
       scale_x_date(
         breaks = seq(
-          from = min(fallecidos_region()$fecha),
-          to = max(fallecidos_region()$fecha),
+          from = min(covid_fallecidos_region()$fecha),
+          to = max(covid_fallecidos_region()$fecha),
           length.out = 10
         ),
         date_labels = "%d/%B",
@@ -2249,9 +2249,9 @@ shinyServer(function(input, output, session) {
       labs(
         subtitle = paste(
           "Casos entre el",
-          format(min(fallecidos_region()$fecha), "%d de %B"),
+          format(min(covid_fallecidos_region()$fecha), "%d de %B"),
           "y el",
-          format(max(fallecidos_region()$fecha), "%d de %B")
+          format(max(covid_fallecidos_region()$fecha), "%d de %B")
         ),
         caption = "Mesa de datos Covid-19, Fallecidos por región incremental\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
         y = "Fallecimientos por región"
@@ -2289,7 +2289,7 @@ shinyServer(function(input, output, session) {
   output$fallecidos_region_inc_xlsx <- downloadHandler(
     filename = "fallecidos_region_incremental_DataUC.xlsx",
     content = function(filename) {
-      writexl::write_xlsx(fallecidos_region(), filename)
+      writexl::write_xlsx(covid_fallecidos_region(), filename)
     },
     contentType = "application/xlsx"
   )
@@ -2311,14 +2311,14 @@ shinyServer(function(input, output, session) {
   })
   
   # resultado de selector región
-  region_g_comuna_elegida <- reactive({
-    as.character(input$selector_region_g_comuna)
-  })
+  # region_g_comuna_elegida <- reactive({
+  #   as.character(input$selector_region_g_comuna)
+  # })
   
   # filtrar la región elegida (para contar las comunas que tiene)
   g_comuna_pre <- reactive({
     p <- covid_comuna() %>%
-      filter(region == region_g_comuna_elegida()) %>%
+      filter(region == input$selector_region_g_comuna) %>%
       select(comuna, casos, fecha) %>%
       na.omit() %>%
       # filter(fecha >= lubridate::ymd("2020-03-30")) %>%
@@ -2419,13 +2419,13 @@ shinyServer(function(input, output, session) {
       labs(subtitle = paste(
         ifelse(input$selector_region == "Metropolitana",
                paste("Región Metropolitana"),
-               paste("Región de", region_g_comuna_elegida())),
+               paste("Región de", input$selector_region_g_comuna)),
         "\nCasos entre el", format(min(covid_comuna()$fecha), "%d de %B"),
         "y el", format(max(covid_comuna()$fecha), "%d de %B")),
         caption = "Reporte diario Covid-19, Ministerio de Salud Mesa de datos Covid-19, casos totales por comuna incremental\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
         y = "Casos contagiados con Covid-19")
     p2
-  })
+  }) %>% bindCache(Sys.Date(), input$selector_region_g_comuna)
   
   # Out ----
   output$grafico_comunas_int <- renderGirafe({
@@ -2454,7 +2454,7 @@ shinyServer(function(input, output, session) {
   
   
   
-  # Casos nuevos por comuna !!!! ----
+  # Casos nuevos por comuna ----
   # Casos nuevos por fecha de inicio de síntomas por comuna
   
   # primer selector: región
@@ -2521,34 +2521,18 @@ shinyServer(function(input, output, session) {
     p <- nuevos_comuna2() %>%
       ungroup() %>%
       filter(fin_semana_epidemiologica != max(fin_semana_epidemiologica)) %>%
+        #limitar meses
+        filter(inicio_semana_epidemiologica >= max(inicio_semana_epidemiologica)-months(4)) %>%
       mutate(semana_epidemiologica = forcats::fct_reorder(semana_epidemiologica, inicio_semana_epidemiologica)) %>%
       ggplot(aes(semana_epidemiologica, casos,
-                 group = comuna
-      )) +
+                 group = comuna)) +
       geom_line(size = 2, col = "#DF1A57", alpha = 0.4) +
       geom_point_interactive(aes(
         tooltip = stringr::str_wrap(
-          paste(
-            "Se reportaron", casos, "casos nuevos",
+          paste("Se reportaron", casos, "casos nuevos",
             "para la semana epidemiológica", etiqueta
-          ),
-          40
-        )
-      ), size = 4, col = "#DF1A57") +
-      # geom_label(
-      #   aes(
-      #     label = ifelse(casos > 0, paste0("+", casos, ""), "0"),
-      #     y = casos
-      #   ),
-      #   label.padding = unit(2.2, "pt"),
-      #   label.size = 0.4,
-      #   family = "Open Sans",
-      #   col = "#DF1A57",
-      #   size = 4,
-      #   hjust = 0.5,
-      #   vjust = -0.8,
-      #   show.legend = FALSE
-      # ) +
+          ), 40)
+        ), size = 4, col = "#DF1A57") +
       scale_fill_manual(values = "#DF1A57") +
       scale_y_continuous(
         labels = function(x) {
@@ -2558,8 +2542,7 @@ shinyServer(function(input, output, session) {
       ) +
       scale_x_discrete(
         breaks = nuevos_comuna2()$semana_epidemiologica,
-        labels = nuevos_comuna2()$etiqueta
-      ) +
+        labels = nuevos_comuna2()$etiqueta) +
       coord_cartesian(clip = "off") +
       tema_lineas +
       ocultar_título_leyenda +
@@ -2647,11 +2630,11 @@ shinyServer(function(input, output, session) {
   })
   
   # resultado segundo selector: comuna
-  activos_comuna_comuna_elegida <- reactive({
-    req(input$selector_region_activos_comuna)
-    
-    input$selector_comuna_activos_comuna
-  })
+  # activos_comuna_comuna_elegida <- reactive({
+  #   req(input$selector_region_activos_comuna)
+  #   
+  #   input$selector_comuna_activos_comuna
+  # })
   
   
   # filtrar datos con la comuna elegida
@@ -2659,7 +2642,7 @@ shinyServer(function(input, output, session) {
     req(activos_comuna1(), input$selector_comuna_activos_comuna)
     
     activos_comuna1() %>%
-      filter(comuna == activos_comuna_comuna_elegida()) %>%
+      filter(comuna == input$selector_comuna_activos_comuna) %>%
       droplevels()
   })
   
@@ -2694,7 +2677,7 @@ shinyServer(function(input, output, session) {
             round(as.numeric(tasa_n), digits = 1),
             "casos por cada 100 mil habitantes",
             "al", format(fecha, "%d de %B")), 40)), 
-        size = 4) +
+        size = 3) +
       # geom_text(aes(
       #     label = ifelse(grupo == "Casos", casos, ""),
       #     y = casos),
@@ -2745,7 +2728,7 @@ shinyServer(function(input, output, session) {
         y = "Casos y tasa de Covid-19"
       )
     p
-  })
+  }) %>% bindCache(Sys.Date(), input$selector_region_activos_comuna, input$selector_comuna_activos_comuna)
   
   # Out ----
   output$activos_comuna_int <- renderGirafe({
@@ -2779,7 +2762,10 @@ shinyServer(function(input, output, session) {
   evolucion_casos_nuevos_g <- reactive({
     p <- nuevos_comuna() %>%
       filter(codigo_region==13) %>%
-      filter(inicio_semana_epidemiologica > lubridate::ymd("2020-04-01")) %>%
+      #filter(inicio_semana_epidemiologica > lubridate::ymd("2020-04-01")) %>%
+        filter(!is.na(inicio_semana_epidemiologica),
+               !is.na(fin_semana_epidemiologica)) %>%
+        filter(inicio_semana_epidemiologica >= max(inicio_semana_epidemiologica)-months(5)) %>% #limitar meses
       filter(poblacion > 150000) %>%
       filter(inicio_semana_epidemiologica != max(inicio_semana_epidemiologica)) %>%
       mutate(comuna = stringr::str_replace(comuna, "Nunoa", "Ñuñoa"),
@@ -2791,9 +2777,9 @@ shinyServer(function(input, output, session) {
       mutate(prop = casos/final) %>%
       select(comuna, casos, final, prop, everything()) %>%
       ungroup() %>%
-      mutate(semana = paste(format(inicio_semana_epidemiologica, "%d de %B"),
+      mutate(semana = paste(format(inicio_semana_epidemiologica, "%d de %b"),
                             "al\n",
-                            format(fin_semana_epidemiologica, "%d de %B"))) %>%
+                            format(fin_semana_epidemiologica, "%d de %b"))) %>%
       mutate(semana = forcats::fct_reorder(semana, inicio_semana_epidemiologica)) %>%
       #glimpse()
       #graficar
@@ -2829,7 +2815,7 @@ shinyServer(function(input, output, session) {
         y="Comunas",
         x="Semanas epidemiológicas",
         caption="Fuente: Mesa de datos COVID-19, Casos nuevos por fecha de inicio de síntomas por comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
-  })
+  }) %>% bindCache(Sys.Date())
   
   
   # Out ----
