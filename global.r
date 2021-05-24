@@ -16,9 +16,9 @@ options(scipen=9999)
 
 # # Población de las regiones (Censo 2017) ----
 # 
-# region <- c("Aysén", "Magallanes", "Arica y Parinacota", "Atacama", "Tarapacá", "Los Ríos", "Ñuble", "Antofagasta", "Coquimbo", "Araucanía", "O’Higgins", "Metropolitana", "Valparaíso", "Biobío", "Maule", "Los Lagos")
-# poblacion <- c(103158, 166533, 226068, 286168, 330558, 384837, 480609, 607534, 757586, 957224, 914555, 7112808, 1815902, 1556805, 1044950, 828708)
-# poblaciones <- data.frame(region, poblacion)
+region <- c("Aysén", "Magallanes", "Arica y Parinacota", "Atacama", "Tarapacá", "Los Ríos", "Ñuble", "Antofagasta", "Coquimbo", "Araucanía", "O’Higgins", "Metropolitana", "Valparaíso", "Biobío", "Maule", "Los Lagos")
+poblacion <- c(103158, 166533, 226068, 286168, 330558, 384837, 480609, 607534, 757586, 957224, 914555, 7112808, 1815902, 1556805, 1044950, 828708)
+poblaciones <- data.frame(region, poblacion)
 # 
 # # Funciones para evitar repeticion ----------------------------------------
 # 
