@@ -899,7 +899,7 @@ Todos los datos son obtenidos en tiempo real de los repositorios de la Mesa de D
                 style = "display: inline-block;",
                 tags$a(
                   href = "http://bastian.olea.biz",
-                  "Bastián Olea Herrera",
+                  "Bastián Olea Herrera @bastimapache",
                   style = "color: #df1a57;"
                 ),
               ),

@@ -27,8 +27,6 @@ shinyServer(function(input, output, session) {
   
   activos_comuna <- readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna") # 19
   
-  #----
-  #----
   # Población de las regiones (Censo 2017) ----
   
   region <- c("Aysén", "Magallanes", "Arica y Parinacota", "Atacama", "Tarapacá", "Los Ríos", "Ñuble", "Antofagasta", "Coquimbo", "Araucanía", "O’Higgins", "Metropolitana", "Valparaíso", "Biobío", "Maule", "Los Lagos")
@@ -39,7 +37,7 @@ shinyServer(function(input, output, session) {
   
   f_total <- function() {
       covid_region %>%
-          filter(region == region_elegida()) %>%
+          filter(region == input$selector_region) %>%
           na.omit() %>%
           filter(fecha >= lubridate::ymd("2020-03-22"))
   }
@@ -110,8 +108,7 @@ shinyServer(function(input, output, session) {
   
   
   
-  #----
-  #----
+  #—----
   
   # Datos por región ----
   # covid_region <- reactive({
@@ -142,7 +139,7 @@ shinyServer(function(input, output, session) {
   nuevos_comuna <- reactive({
     nuevos_comuna <-
       readr::read_csv("http://localhost:8080/casos_nuevos_sintomas_comuna") # 15
-  })
+  }) %>% bindCache(Sys.Date())
   
   # Casos activos por fecha de inicio de síntomas y comuna ----
   # activos_comuna <- reactive({
@@ -155,11 +152,11 @@ shinyServer(function(input, output, session) {
   
   covid_region_nuevos <- reactive({
     #req(covid_region)
-    readr::read_csv("http://localhost:8080/casos_nuevos_region_incremental") #%>% # 13
+    readr::read_csv("http://localhost:8080/casos_nuevos_region_incremental")#%>% # 13
     # mutate(
     #   fecha = lubridate::ymd(fecha)
     # )
-  })
+  }) %>% bindCache(Sys.Date())
   
   # Hospitalizados UCI ----
   
@@ -175,7 +172,7 @@ shinyServer(function(input, output, session) {
   hosp_integrado <- reactive({
     hosp_integrado <-
       readr::read_csv("http://localhost:8080/hospitalizacion_sistema_integrado") # 24
-  })
+  }) %>% bindCache(Sys.Date())
   
   # Fallecidos total ----
   
@@ -184,7 +181,7 @@ shinyServer(function(input, output, session) {
     # mutate(
     #   fecha = lubridate::ymd(fecha)
     # )
-  })
+  }) %>% bindCache(Sys.Date())
   
   # Fallecidos por región ----
   
@@ -193,13 +190,13 @@ shinyServer(function(input, output, session) {
     # mutate(
     #   fecha = lubridate::ymd(fecha)
     # )
-  })
+  }) %>% bindCache(Sys.Date())
   
   # Fallecidos por región incremental ----
   fallecidos_region <- reactive({
     fallecidos_region <-
       readr::read_csv("http://localhost:8080/fallecidos_region_incremental") # 14
-  })
+  }) %>% bindCache(Sys.Date())
   
   # Exámenes PCR ----
   
@@ -208,14 +205,14 @@ shinyServer(function(input, output, session) {
     # mutate(
     #   fecha = lubridate::ymd(fecha)
     # )
-  })
+  }) %>% bindCache(Sys.Date())
   
   # Datos pacientes criticos ----
   pacientes_criticos <- reactive({
     pacientes_criticos <-
       readr::read_csv("http://localhost:8080/pacientes_criticos") %>% # 23
       mutate(categoria = as.factor(categoria))
-  })
+  }) %>% bindCache(Sys.Date())
   
   
   # Datos Hospitalizados totales por grupo de edad y género ----
@@ -227,20 +224,20 @@ shinyServer(function(input, output, session) {
         grupo_de_edad = as.factor(grupo_de_edad),
         categoria = as.factor(categoria)
       )
-  })
+  }) %>% bindCache(Sys.Date())
   
   # Datos Hospitalizados UCI por grupo de edad ----
   hosp_edad_uci <- reactive({
     hosp_edad_uci <-
       readr::read_csv("http://localhost:8080/hospitalizados_grupo_edad") %>% # 22
       filter(categoria == "Hospitalizados UCI")
-  })
+  }) %>% bindCache(Sys.Date())
   
   # Datos Pacientes en UCI por grupo de edad ----
   uci_edad <- reactive({
     uci_edad <-
       readr::read_csv("http://localhost:8080/pacientes_uci_grupo_edad") # 9
-  })
+  }) %>% bindCache(Sys.Date())
   
   # # Datos Casos por genero y grupo de edad ----
   # casos_genero_edad <- reactive({
@@ -252,7 +249,7 @@ shinyServer(function(input, output, session) {
   # Datos ventiladores mecánicos a nivel nacional ----
   ventiladores <- reactive({
     readr::read_csv("http://localhost:8080/ventiladores_nacional") # 20
-  })
+  }) %>% bindCache(Sys.Date())
   
   # Totales nacionales ----
   
@@ -275,16 +272,18 @@ shinyServer(function(input, output, session) {
   # Región elegida ----
   region_elegida <- reactive({
     req(input$selector_region)
-    input$selector_region})
+    
+    input$selector_region
+    })
   
   dimension_horizontal <- reactive({input$dimension[1]})
   
   
   output$region_elegida_explicacion <- renderText({
-    if (region_elegida() == "Total") {
+    if (input$selector_region == "Total") {
       paste("Ninguna región seleccionada. Mostrando casos totales de Chile")
     } else {
-      paste(region_elegida())
+      paste(input$selector_region)
     }
   })
   
@@ -306,12 +305,12 @@ shinyServer(function(input, output, session) {
   
   # Región elegida (input selector)
   output$region_elegida <- renderText({
-    paste(region_elegida())
+    paste(input$selector_region)
   })
   
   # Lo mismo pero entre paréntesis
   output$region_elegida_p <- renderText({
-    paste0("(", region_elegida(), ")")
+    paste0("(", input$selector_region, ")")
   })
   
   # casos RM
@@ -328,7 +327,7 @@ shinyServer(function(input, output, session) {
   # casos para la región elegida
   # casos_region_ultimo <- reactive({
   #   covid_region %>%
-  #     filter(region == region_elegida()) %>%
+  #     filter(region == input$selector_region) %>%
   #     filter(fecha == max(fecha)) %>%
   #     summarize(casos = casos)
   # })
@@ -487,6 +486,634 @@ shinyServer(function(input, output, session) {
     )
   })
   
+  # —----
+  
+  #Pestaña 1: GENERAL ----
+  
+  # Totales nacionales ----
+  
+  g_totales_nacionales <- reactive({
+    #req(covid_totales)
+    
+    p <- f_totales_nacionales() %>%
+      filter(categoria %in% c("activos", "activos probables", "nuevos totales", "nuevos sin notificar")) %>%
+      ungroup() %>%
+      mutate(categoria = recode(categoria, 
+                                "nuevos totales"="nuevos")) %>%
+      ggplot(aes(fecha, casos,
+                 col = forcats::fct_reorder(categoria, final),
+                 fill = forcats::fct_reorder(categoria, final))) +
+      geom_line(size = 2, alpha = 0.8) +
+      geom_point_interactive(aes(
+        tooltip = stringr::str_wrap(
+          paste0(stringr::str_to_sentence(categoria), ": ", casos, " casos",
+                 " al ", format(fecha, "%d de %B")
+          ), 40)), size = 1, alpha=0.1) +
+      geom_text_repel(aes(x = max(fecha), y = casos,
+                          label = ifelse(fecha == max(fecha),
+                                         as.character(paste0(stringr::str_to_sentence(categoria), ": ", 
+                                                             stringr::str_trim(format(casos, big.mark=".")))), "")),
+                      hjust = 0,
+                      nudge_x = 2,
+                      box.padding = unit(0, "points"),
+                      min.segment.length = unit(7, "points"),
+                      segment.alpha = 0.2, segment.size = 1.5,
+                      size = 5,
+                      family = "Open Sans",
+                      direction = "y") +
+      scale_y_continuous(labels = function(x) format(x, big.mark = ".")) +
+      scale_x_date(breaks = seq(from = min(covid_totales$fecha), to = max(covid_totales$fecha), 
+                                length.out = 15),
+                   date_labels = "%d/%B",
+                   expand = expansion(mult = c(0, 0.3))) +
+      #scale_color_manual_interactive(drop = TRUE, values = rev(degradado1(4))) +
+      scale_color_manual(drop=TRUE,
+                         values = c("#952AA5", "#7033CC", "#BA227E","#DF1A57",
+                                    "#952AA5", "#7033CC", "#DF1A57", "#BA227E")) +
+      #scales::show_col(c("#952AA5", "#7033CC", "#DF1A57", "#BA227E"))
+      theme(legend.position = "none") +
+      coord_cartesian(clip = "off") + # , ylim=c(0,900)) +
+      tema_lineas +
+      theme(axis.text.x = element_text(
+        angle = 45, vjust = 1, hjust = 1,
+        margin = margin(t = 0, b = 2))) +
+      ocultar_titulo_x +
+      labs(subtitle = paste("Casos entre el", format(min(covid_totales$fecha), "%d de %B del %Y"), "y el", format(max(covid_totales$fecha), "%d de %B del %Y")),
+           caption = "Mesa de datos Covid-19, casos totales nacionales diarios\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
+           y = "Cantidad de casos")
+    
+    p
+  }) %>% bindCache(Sys.Date)
+  
+  # Output ----
+  output$g_totales_nacionales_int <- renderGirafe({
+    girafe(
+      ggobj = g_totales_nacionales(),
+      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
+      height_svg = 9,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        opts_sizing(rescale = TRUE, width = .95),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
+  
+  #Descarga
+  output$g_totales_nacionales_xlsx <- downloadHandler(
+    filename = "totales_nacionales_DataUC.xlsx",
+    content = function(filename) {
+      writexl::write_xlsx(f_totales_nacionales(), filename)
+    },
+    contentType = "application/xlsx"
+  )
+  
+  # Casos activos ----
+  
+  casos_activos_g <- reactive({
+    #req(covid_totales)
+    
+    p <- f_totales_nacionales() %>%
+      filter(categoria == "activos") %>% 
+      ggplot(aes(fecha, casos,
+                 col = forcats::fct_reorder(categoria, final),
+                 fill = forcats::fct_reorder(categoria, final))) +
+      geom_line(size = 2, alpha = 0.8) +
+      geom_point_interactive(aes(
+        tooltip = stringr::str_wrap(
+          paste0(stringr::str_to_sentence(categoria), ": ", format(casos, big.mark="."), " casos",
+                 " al ", format(fecha, "%d de %B")), 40)), 
+        size = 1, alpha = 0.1) +
+      # geom_text(aes(
+      #   label = ifelse(lubridate::day(fecha) %% 3 == 0,
+      #                  ifelse(fecha!=max(fecha), 
+      #                         casos,
+      #                         ""),
+      #                  "")),
+      #   col = "#DF1A57", size = 4,
+      #   family = "Open Sans",
+      #   hjust = 1, vjust = -1.4,
+      #   show.legend = FALSE) +
+      geom_text_repel(aes(x = max(fecha), y = casos,
+                          label = ifelse(fecha == max(fecha),
+                                         as.character(paste0(stringr::str_to_sentence(categoria), ": ", casos)), "")),
+                      hjust = 0, nudge_x = 2,
+                      box.padding = unit(0, "points"), min.segment.length = unit(7, "points"),
+                      segment.alpha = 0.2, segment.size = 1.5, size = 5,
+                      family = "Open Sans", direction = "y") +
+      scale_y_continuous(labels = function(x) format(x, big.mark = ".")) +
+      scale_x_date(breaks = seq(from = min(covid_totales$fecha), to = max(covid_totales$fecha), length.out = 10),
+                   date_labels = "%d/%B",
+                   expand = expansion(mult = c(0, 0.2))) +
+      scale_color_manual_interactive(drop = TRUE, values = degradado1(5)) +
+      theme(legend.position = "none") +
+      coord_cartesian(clip = "off") + # , ylim=c(0,900)) +
+      tema_lineas +
+      theme(axis.text.x = element_text(
+        angle = 45, vjust = 1, hjust = 1,
+        margin = margin(t = 0, b = 2)
+      )) +
+      ocultar_titulo_x +
+      labs(
+        subtitle = paste("Casos activos entre el", format(min(covid_totales$fecha), "%d de %B del %Y"), "y el", format(max(covid_totales$fecha), "%d de %B del %Y")),
+        caption = "Mesa de datos Covid-19, casos totales nacionales diarios\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
+        y = "Cantidad de casos activos"
+      )
+    
+    p
+  }) %>% bindCache(Sys.Date)
+  
+  
+  # Out ----
+  output$casos_activos_int <- renderGirafe({
+    girafe(
+      ggobj = casos_activos_g(),
+      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
+      height_svg = 6,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        opts_sizing(rescale = TRUE, width = .95),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
+  
+  
+  # Descarga----
+  output$casos_activos_total_xlsx <- downloadHandler(
+    filename = "activos_totales_nacionales_DataUC.xlsx",
+    content = function(filename) {
+      writexl::write_xlsx(f_totales_nacionales() %>% filter(categoria == "activos"), filename)
+    },
+    contentType = "application/xlsx"
+  )
+  
+  
+  # Casos nuevos total ----
+  
+  g_total_nuevos <- reactive({
+    
+    covid_region_nuevos() %>%
+      filter(region == "Total") %>%
+      na.omit() %>%
+      filter(fecha >= lubridate::ymd("2020-03-22")) %>%
+      ggplot(aes(fecha, casos)) +
+      geom_line(size = 2, col = "#7033CC", alpha = 0.8) +
+      # geom_point(size=4, col="#DF1A57") +
+      geom_point_interactive(aes(
+        tooltip = stringr::str_wrap(
+          paste("El", format(fecha, "%d de %B"), "se reportaron", casos, 
+                "casos nuevos de Covid-19 con respecto al día anterior en el país"), 
+          40)), size = 1, alpha=0.1, col = "#7033CC") +
+      # geom_label(aes(
+      #   label = ifelse(casos > 0, paste0("+", casos, ""), "0"),
+      #   y = casos),
+      # label.padding = unit(2.2, "pt"), label.size = 0.4,
+      # family = "Open Sans", col = "#DF1A57",
+      # size = 4, hjust = 0.5, vjust = -1, show.legend = FALSE) +
+      scale_y_continuous(labels = function(x) format(x, big.mark = ".")) +
+      scale_x_date(breaks = seq(
+        from = lubridate::ymd("2020-03-22"), to = max(covid_region_nuevos()$fecha),
+        #by = 1
+        length.out=15),
+        # length.out=15),
+        expand = expansion(add = c(0, 0.6)),
+        date_labels = "%d/%B") +
+      scale_fill_manual(values = "#DF1A57") +
+      scale_y_continuous(labels = function(x) round(x, digits = 0)) +
+      coord_cartesian(clip = "off") +
+      tema_lineas +
+      ocultar_título_leyenda +
+      ocultar_titulo_x +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1,
+                                       margin = margin(t = 5, b = 5)),
+            legend.text = element_text(margin = margin(r = 30))) +
+      theme(legend.position = "bottom") +
+      # labs(subtitle = paste("Entre el 22 de marzo y", format(max(covid_region$fecha), "%d de %B") ),
+      labs(
+        subtitle = paste("Datos a nivel nacional",
+                         "\nEntre el 22 de marzo y", format(max(covid_region_nuevos()$fecha), "%d de %B")
+        ),
+        caption = "Mesa de datos COVID-19, casos nuevos por región incremental\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
+        y = "Casos nuevos de Covid-19"
+      )
+  }) %>% bindCache(Sys.Date)
+  
+  # Out ----
+  
+  output$g_total_nuevos_int <- renderGirafe({
+    girafe(
+      ggobj = g_total_nuevos(),
+      # width_svg = 16,
+      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
+      height_svg = 7,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        opts_sizing(rescale = TRUE, width = .95),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
+  #Descarga
+  output$g_total_nuevos_xlsx <- downloadHandler(
+    filename = "reg_nuevos_DataUC.xlsx",
+    content = function(filename) {
+      writexl::write_xlsx(covid_region_nuevos() %>% filter(region=="Total"), filename)
+    },
+    contentType = "application/xlsx"
+  )
+  
+  # Casos por genero y grupo de edad ----
+  
+  casos_genero_edad_g <- reactive({ # grafico
+    p <- f_casos_genero_edad() %>%
+      ggplot(aes(fecha, casos,
+                 col = grupo_de_edad)) +
+      geom_line(size = 2) +
+      geom_text_repel(
+        aes(x = max(fecha),
+            y = casos,
+            label = ifelse(casos > 0,
+                           ifelse(
+                             fecha == max(fecha),
+                             as.character(paste0(" ", grupo_de_edad, ": ", format(casos, big.mark="."))), ""), "")),
+        hjust = -0.3, nudge_x = 0.5,
+        box.padding = unit(0, "points"),
+        min.segment.length = unit(8, "points"),
+        segment.alpha = 0.3,
+        size = 5, direction = "y") +
+      scale_y_continuous(labels = function(x) format(x, big.mark = ".")) +
+      scale_x_date(breaks = seq(
+        from = min(casos_genero_edad$fecha), to = max(casos_genero_edad$fecha),
+        #by = 2),
+        length.out=15),
+        expand = expansion(mult = c(0, 0.27)),
+        date_labels = "%d/%B") +
+      scale_color_manual(name = "edades", values = rev(degradado7(4)) ) +
+      coord_cartesian(clip = "off") +
+      facet_wrap(~sexo, ncol = 1) +
+      tema_lineas +
+      ocultar_titulo_x +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1,
+                                       margin = margin(t = 0, b = 2)),
+            legend.text = element_text(margin = margin(r = 20)),
+            axis.text.y = element_text(margin = margin(l = 5, r = 5))) +
+      theme(legend.position = "none") +
+      labs(subtitle = paste(
+        "Casos entre el",
+        format(min(casos_genero_edad$fecha), "%d de %B"),
+        "y el",
+        format(max(casos_genero_edad$fecha), "%d de %B")
+      ),
+      caption = "Mesa de datos Covid-19, Casos por género y grupo de edad\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
+      y = "Casos según género y edad"
+      )
+    p
+  }) %>% bindCache(Sys.Date)
+  
+  # Out ----
+  output$casos_genero_edad_int <- renderGirafe({
+    girafe(
+      ggobj = casos_genero_edad_g(),
+      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
+      height_svg = 9,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        opts_sizing(rescale = TRUE, width = .95),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
+  
+  #Descarga
+  output$casos_genero_edad_xlsx <- downloadHandler(
+    filename = "casos_genero_edad_DataUC.xlsx",
+    content = function(filename) {
+      writexl::write_xlsx(f_casos_genero_edad(), filename)
+    },
+    contentType = "application/xlsx"
+  )
+  
+  
+  # Fallecidos totales ----
+  
+  fallecidos_total_g <- reactive({
+    #req(covid_totales)
+    
+    p <- f_totales_nacionales() %>%
+      filter(categoria == "Fallecidos") %>% 
+      ggplot(aes(fecha, casos,
+                 col = forcats::fct_reorder(categoria, final),
+                 fill = forcats::fct_reorder(categoria, final))) +
+      geom_line(size = 2, alpha = 0.8, color= "#DF1A57") +
+      geom_point_interactive(aes(
+        tooltip = stringr::str_wrap(
+          paste0(stringr::str_to_sentence(categoria), ": ", casos, " casos", " al ", format(fecha, "%d de %B")
+          ), 40)), size = 1, alpha=0.1, color= "#DF1A57") +
+      geom_text_repel(aes(
+        x = max(fecha), y = casos,
+        label = ifelse(fecha == max(fecha),
+                       as.character(paste0(stringr::str_to_sentence(categoria), ": ", format(casos, big.mark="."))), "")),
+        hjust = 0, nudge_x = 2,
+        box.padding = unit(0, "points"),
+        min.segment.length = unit(7, "points"),
+        segment.alpha = 0.2, segment.size = 1.5,
+        size = 5,
+        family = "Open Sans", direction = "y") +
+      scale_y_continuous(labels = function(x) format(x, big.mark = ".")) +
+      scale_x_date(breaks = seq(from = min(covid_totales$fecha), to = max(covid_totales$fecha), length.out = 10),
+                   date_labels = "%d/%B",
+                   expand = expansion(mult = c(0, 0.25))) +
+      #scale_color_manual_interactive(drop = TRUE, values = degradado1(5)) +
+      theme(legend.position = "none") +
+      coord_cartesian(clip = "off") + # , ylim=c(0,900)) +
+      tema_lineas +
+      theme(axis.text.x = element_text(
+        angle = 45, vjust = 1, hjust = 1,
+        margin = margin(t = 0, b = 2)
+      )) +
+      ocultar_titulo_x +
+      labs(
+        subtitle = paste("Fallecimientos entre el", format(min(covid_totales$fecha), "%d de %B"), "y el", format(max(covid_totales$fecha), "%d de %B")),
+        caption = "Mesa de datos Covid-19, casos totales nacionales diarios\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
+        y = "Cantidad de personas fallecidas"
+      )
+    
+    p
+  }) %>% bindCache(Sys.Date)
+  
+  # Out ----
+  output$fallecidos_totales_int <- renderGirafe({
+    girafe(
+      ggobj = fallecidos_total_g(),
+      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
+      height_svg = 6,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        opts_sizing(rescale = TRUE, width = .95),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
+  
+  #Descarga
+  output$g_fallecidos_total_xlsx <- downloadHandler(
+    filename = "fallecidos_totales_nacionales_DataUC.xlsx",
+    content = function(filename) {
+      writexl::write_xlsx(f_totales_nacionales() %>% filter(categoria == "Fallecidos"), filename)
+    },
+    contentType = "application/xlsx"
+  )
+  
+  
+  # Fallecidos por edad ----
+  
+  g_fallecidos <- reactive({
+    
+    p <- covid_fallecidos() %>%
+      mutate(edad = forcats::fct_relevel(grupo_de_edad, ">=90", after = Inf)) %>%
+      na.omit() %>%
+      ggplot(aes(fecha, casos, col = grupo_de_edad)) +
+      geom_line(size = 2, alpha = 0.8) +
+      geom_point_interactive(aes(
+        tooltip = stringr::str_wrap(
+          paste("Se reportaron", format(casos, big.mark="."), "personas fallecidas",
+                "con una edad de", edad, "producto de Covid-19",
+                "al", format(fecha, "%d de %B")), 40)), size = 1, alpha=0.1) +
+      # geom_text(aes(
+      #   label = ifelse(fecha != max(fecha), casos, ""), y = casos),
+      # size = 5, hjust = 0.5, vjust = -0.8,
+      # check_overlap = TRUE, show.legend = FALSE) +
+      geom_text_repel(aes(
+        x = max(fecha), y = casos,
+        label = ifelse(casos > 0,
+                       ifelse(fecha == max(fecha),
+                              as.character(paste0(grupo_de_edad, " años: ", format(casos, big.mark="."))), ""),"")),
+        hjust = -0.2, nudge_x = 0.2,
+        box.padding = unit(0, "points"),
+        min.segment.length = unit(8, "points"),
+        segment.alpha = 0.3,
+        size = 5, direction = "y") +
+      scale_y_continuous(labels = function(x) format(x, big.mark = ".")) +
+      scale_x_date(breaks = seq(from = lubridate::ymd("2020-04-09"), to = max(covid_fallecidos()$fecha), 
+                                #by = 1), 
+                                length.out=15),
+                   expand = expansion(mult = c(0, 0.27)),
+                   date_labels = "%d/%B") +
+      scale_color_manual(
+        name = "edades",
+        values = rev(degradado7(7))) +
+      coord_cartesian(clip = "off") +
+      tema_lineas +
+      ocultar_titulo_x +
+      theme(
+        axis.text.x = element_text(
+          angle = 45, vjust = 1, hjust = 1,
+          margin = margin(t = 0, b = 2)
+        ),
+        legend.text = element_text(margin = margin(r = 20)),
+        axis.text.y = element_text(margin = margin(l = 5, r = 5))
+      ) +
+      theme(legend.position = "none") +
+      labs(
+        subtitle = paste("Casos entre el 9 y", format(max(covid_fallecidos()$fecha), "%d de %B")),
+        caption = "Mesa de datos Covid-19, Fallecidos por grupo de edad\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
+        y = "Defunciones"
+      )
+    
+    p
+  })  %>% bindCache(Sys.Date)
+  
+  
+  # Letalidad ----
+  
+  g_letalidad <- reactive({
+    p <- f_letalidad() %>%
+      ggplot(aes(fecha, Tasa)) +
+      geom_col_interactive(
+        fill = "#DF1A57", width = 0.6,
+        aes(tooltip = stringr::str_wrap(
+          paste("El día", format(fecha, "%d de %B"), "se registró una tasa de mortalidad de un",
+                scales::percent(Tasa, accuracy = 0.01),
+                "de personas fallecidas entre los", format(Activos, big.mark="."),
+                "casos totales"), 40))) +
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+      scale_x_date(
+        breaks = seq(from = min(covid_totales$fecha), to = max(covid_totales$fecha), length.out = 10),
+        date_labels = "%d/%B") +
+      coord_cartesian(ylim = c(0, .1)) +
+      geom_text(aes(label = ifelse(Tasa != 0,
+                                   ifelse(lubridate::day(fecha) %% 5 == 0,
+                                          scales::percent(Tasa, accuracy = 0.01), ""),"")),
+                family = "Open Sans",
+                angle = 90, size = 4, vjust = 0.5, hjust = -0.2, col="gray50") +
+      labs( # title="Tasa de letalidad del Covid-19",
+        subtitle = paste("Nivel nacional\nÚltima actualización:", format(max(covid_totales$fecha), "%d de %B")),
+        caption = "Mesa de datos Covid-19, casos totales por región incremental\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
+        y = "Tasa de letalidad (proporción de\nfallecimientos entre los casos totales)"
+      ) +
+      tema_barras_label +
+      ocultar_titulo_x +
+      linea_gris_y +
+      theme(
+        axis.text.x = element_text(
+          size = 13, angle = 45, hjust = 1,
+          margin = margin(t = -5, b = -5)
+        ),
+        axis.text.y = element_text(margin = margin(r = 5)),
+        plot.caption = element_text(margin = margin(t = 10)),
+        legend.key.size = unit(1.2, "lines"),
+        plot.title.position = "plot"
+      )
+    p
+  }) %>% bindCache(Sys.Date)
+  
+  
+  # Hospitalizados ----
+  
+  g_hospitalizados <- reactive({
+    p <- f_hospitalizados() %>%
+      mutate(Orden = casos[fecha == max(fecha)]) %>%
+      ggplot(aes(fecha, casos,
+                 group = region,
+                 col = forcats::fct_reorder(region, Orden),
+                 col = forcats::fct_reorder(region, Orden))) +
+      geom_line_interactive(aes(
+        tooltip = stringr::str_wrap(
+          paste("Región de", region), 40)), size = 2, alpha=0.8) +
+      geom_text_repel(aes(
+        x = max(fecha), y = casos,
+        label = ifelse(casos > 0,
+                       ifelse(fecha == max(fecha),
+                              as.character(paste0(region, ": ", format(casos, big.mark="."))), ""),"")),
+        hjust = -0.2, nudge_x = 0.5,
+        box.padding = unit(0, "points"),
+        min.segment.length = unit(8, "points"),
+        segment.alpha = 0.3,
+        size = 5, direction = "y") +
+      scale_x_date(
+        breaks = seq(from = lubridate::ymd("2020-04-01"), to = max(covid_hospitalizados$fecha), length.out = 10),
+        date_labels = "%d/%B",
+        expand = expansion(mult = c(0, 0.26))) +
+      scale_color_manual(values = rev(degradado1(15))) +
+      scale_fill_manual(values = rev(degradado1(15))) +
+      theme(legend.position = "none") +
+      coord_cartesian(clip = "off") +
+      tema_lineas +
+      ocultar_titulo_x +
+      labs(subtitle = paste("Exceptuando Región Metropolitana\nCasos entre el 1 y", format(max(covid_hospitalizados$fecha), "%d de %B")),
+           caption = "Mesa de datos Covid-19, Pacientes en UCI por región\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
+           y = "Casos hospitalizados en camas UCI") +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1,
+                                       margin = margin(l = 5, b = 5)),
+            axis.text.y = element_text(margin = margin(l = 5, r = 3)))
+    
+    p
+  }) %>% bindCache(Sys.Date)
+  
+  
+  
+  # Output hospitalizados ----
+  output$g_hospitalizados_int <- renderGirafe({
+    girafe(
+      ggobj = g_hospitalizados(),
+      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
+      height_svg = 10,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        opts_sizing(rescale = TRUE, width = .95),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
+  
+  #Descarga
+  output$g_hospitalizados_xlsx <- downloadHandler(
+    filename = "hospitalizados_DataUC.xlsx",
+    content = function(filename) {
+      writexl::write_xlsx(f_hospitalizados(), filename)
+    },
+    contentType = "application/xlsx"
+  )
+  
+  # Output fallecidos ----
+  output$g_fallecidos_int <- renderGirafe({
+    girafe(
+      ggobj = g_fallecidos(),
+      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
+      height_svg = 7,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        opts_sizing(rescale = TRUE, width = .95),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
+  
+  #Descarga
+  output$g_fallecidos_xlsx <- downloadHandler(
+    filename = "fallecidos_DataUC.xlsx",
+    content = function(filename) {
+      writexl::write_xlsx(covid_fallecidos() %>% na.omit(), filename)
+    },
+    contentType = "application/xlsx"
+  )
+  
+  # Output letalidad ----
+  output$g_letalidad_int <- renderGirafe({
+    girafe(
+      ggobj = g_letalidad(),
+      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
+      height_svg = 7,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        opts_sizing(rescale = TRUE, width = .95),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
+  
+  #Descarga
+  output$g_letalidad_xlsx <- downloadHandler(
+    filename = "letalidad_DataUC.xlsx",
+    content = function(filename) {
+      writexl::write_xlsx(f_letalidad() %>% janitor::clean_names(), filename)
+    },
+    contentType = "application/xlsx"
+  )
+  
+  
+  # Output recuperados ----
+  output$g_recuperados_int <- renderGirafe({
+    girafe(
+      ggobj = g_recuperados(),
+      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
+      height_svg = 7,
+      options = list(
+        opts_tooltip(use_fill = TRUE),
+        opts_hover(css = "r: 8px"),
+        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
+        opts_sizing(rescale = TRUE, width = .95),
+        opts_toolbar(position = "topright", saveaspng = FALSE)
+      )
+    )
+  })
   
   
   # —----
@@ -524,7 +1151,7 @@ shinyServer(function(input, output, session) {
           area(col = "Tasa") ~ color_tile("#f4e4f4", "#c8b1de")
         )
       )
-  })
+  }) %>% bindCache(Sys.Date)
   
   output$t_casos_top_10_region <- renderFormattable({
     casos_top_10_region()
@@ -602,7 +1229,7 @@ shinyServer(function(input, output, session) {
           area(col = "Tasa") ~ color_tile("#f4e4f4", "#c8b1de")
         )
       )
-  })
+  }) %>% bindCache(Sys.Date)
   
   output$t_casos_top_comuna <- renderFormattable({
     casos_top_comuna()
@@ -671,7 +1298,7 @@ shinyServer(function(input, output, session) {
           area(col = "Tasa") ~ color_tile("#f4e4f4", "#c8b1de")
         )
       )
-  })
+  }) %>% bindCache(Sys.Date)
   
   output$tabla_nuevos_comuna <- renderFormattable({
     tabla_nuevos_comuna()
@@ -719,10 +1346,10 @@ shinyServer(function(input, output, session) {
     )
   })
   
-  # resultado de selector región
-  tabla_comunas_aumento_elegida <- reactive({
-    input$selector_tabla_comunas_aumento
-  })
+  # resultado de selector región (ahora es input$ no mas)
+  # tabla_comunas_aumento_elegida <- reactive({
+  #   input$selector_tabla_comunas_aumento
+  # })
   
   #Texto de las semanas contempladas en el cálculo del aumento
   casos_totales_comuna_informes <- reactive({
@@ -755,7 +1382,7 @@ shinyServer(function(input, output, session) {
     casos_totales_comuna %>%
       select(fecha, region, comuna, poblacion, casos_confirmados) %>%
       rename(casos=casos_confirmados) %>%
-      filter(region==tabla_comunas_aumento_elegida()) %>%
+      filter(region==input$selector_tabla_comunas_aumento) %>%
       #filter(region=="Metropolitana") %>%
       group_by(comuna) %>%
       arrange(fecha) %>%
@@ -789,7 +1416,7 @@ shinyServer(function(input, output, session) {
           area(col = "Aumento") ~ color_tile("#eaf2fa", "#b0bee8")
         )
       )
-  })
+  }) %>% bindCache(Sys.Date, input$selector_tabla_comunas_aumento)
   
   output$tabla_comunas_aumento <- renderFormattable({
     tabla_comunas_aumento()
@@ -802,7 +1429,7 @@ shinyServer(function(input, output, session) {
       writexl::write_xlsx(casos_totales_comuna %>%
                             select(fecha, region, comuna, poblacion, casos_confirmados) %>%
                             rename(casos=casos_confirmados) %>%
-                            filter(region==tabla_comunas_aumento_elegida()) %>%
+                            filter(region == input$selector_tabla_comunas_aumento) %>%
                             group_by(comuna) %>%
                             arrange(fecha) %>%
                             group_by(comuna) %>%
@@ -861,7 +1488,7 @@ shinyServer(function(input, output, session) {
           #area(col = "Aumento") ~ color_tile("#eaf2fa", "#b0bee8")
         )
       )
-  })
+  }) %>% bindCache(Sys.Date)
   
   output$tabla_casos_activos_comuna <- renderFormattable({
     tabla_casos_activos_comuna()
@@ -913,7 +1540,7 @@ shinyServer(function(input, output, session) {
       na.omit() %>%
       filter(region != "Total")
     
-    if (region_elegida() == "Total") {
+    if (input$selector_region == "Total") {
       p <- p %>%
         mutate(region2 = case_when(
           region == "Metropolitana" ~ "Sí",
@@ -922,7 +1549,7 @@ shinyServer(function(input, output, session) {
     } else {
       p <- p %>%
         mutate(region2 = case_when(
-          region == region_elegida() ~ "Sí",
+          region == input$selector_region ~ "Sí",
           TRUE ~ "No"
         ))
     }
@@ -978,7 +1605,7 @@ shinyServer(function(input, output, session) {
       ))
     
     p
-  })
+  })  %>% bindCache(Sys.Date, input$selector_region, input$regiones_g_excl_rm)
   
   # Out ----
   output$g_regiones_int <- renderGirafe({
@@ -1009,7 +1636,7 @@ shinyServer(function(input, output, session) {
   # Región elegida
   # g_total <- reactive({
   #   # req(
-  #   #   region_elegida(),
+  #   #   input$selector_region,
   #   #   covid_region
   #   # )
   #   
@@ -1063,11 +1690,11 @@ shinyServer(function(input, output, session) {
   #     theme(legend.position = "bottom") +
   #     labs(
   #       subtitle = paste(
-  #         ifelse(region_elegida() == "Metropolitana",
+  #         ifelse(input$selector_region == "Metropolitana",
   #                paste("Región Metropolitana"),
-  #                ifelse(region_elegida() == "Total",
+  #                ifelse(input$selector_region == "Total",
   #                       paste("Datos a nivel nacional"),
-  #                       paste("Región de", region_elegida())
+  #                       paste("Región de", input$selector_region)
   #                )
   #         ),
   #         "\nEntre el 22 de marzo y", format(max(covid_region$fecha), "%d de %B")
@@ -1113,7 +1740,7 @@ shinyServer(function(input, output, session) {
       na.omit() %>%
       filter(region != "Total")
     
-    if (region_elegida() == "Total" | region_elegida() == "Metropolitana") {
+    if (input$selector_region == "Total" | input$selector_region == "Metropolitana") {
       p <- p %>%
         mutate(region2 = case_when(
           region == "X" ~ "Destacada",
@@ -1123,7 +1750,7 @@ shinyServer(function(input, output, session) {
     } else {
       p <- p %>%
         mutate(region2 = case_when(
-          region == region_elegida() ~ as.character(region_elegida()),
+          region == input$selector_region ~ as.character(input$selector_region),
           region == "Metropolitana" ~ "Metropolitana",
           TRUE ~ "Regiones"
         ))
@@ -1183,7 +1810,7 @@ shinyServer(function(input, output, session) {
       ))
     
     p
-  })
+  }) %>% bindCache(Sys.Date, input$selector_region)
   
   # Out ----
   output$g_acumulado_int <- renderGirafe({
@@ -1218,14 +1845,14 @@ shinyServer(function(input, output, session) {
   g_reg_nuevos <- reactive({
     # req(
     #   covid_region,
-    #   region_elegida(),
+    #   input$selector_region,
     #   g_acumulado()
     # )
     
     #Agregar selector para hacer en casos nuevos de regiones
     
     covid_region_nuevos() %>%
-      filter(region == region_elegida()) %>%
+      filter(region == input$selector_region) %>%
       na.omit() %>%
       filter(fecha >= lubridate::ymd("2020-03-22")) %>%
       ggplot(aes(fecha, casos)) +
@@ -1273,11 +1900,11 @@ shinyServer(function(input, output, session) {
       # labs(subtitle = paste("Entre el 22 de marzo y", format(max(covid_region$fecha), "%d de %B") ),
       labs(
         subtitle = paste(
-          ifelse(region_elegida() == "Metropolitana",
+          ifelse(input$selector_region == "Metropolitana",
                  paste("Región Metropolitana"),
-                 ifelse(region_elegida() == "Total",
+                 ifelse(input$selector_region == "Total",
                         paste("Datos a nivel nacional"),
-                        paste("Región de", region_elegida())
+                        paste("Región de", input$selector_region)
                  )
           ),
           "\nEntre el 22 de marzo y", format(max(covid_region_nuevos()$fecha), "%d de %B")
@@ -1319,7 +1946,7 @@ shinyServer(function(input, output, session) {
     p <- covid_examenes()
     
     #Color para región elegida
-    if (region_elegida() == "Total") {
+    if (input$selector_region == "Total") {
       p <- p %>%
         mutate(region2 = case_when(
           region == "Metropolitana" ~ "Sí",
@@ -1328,7 +1955,7 @@ shinyServer(function(input, output, session) {
     } else {
       p <- p %>%
         mutate(region2 = case_when(
-          region == region_elegida() ~ "Sí",
+          region == input$selector_region ~ "Sí",
           TRUE ~ "No"
         ))
     }
@@ -1416,7 +2043,7 @@ shinyServer(function(input, output, session) {
       )
     
     p
-  })
+  })  %>% bindCache(Sys.Date, input$selector_region, input$regiones_pcr_g_excl_rm)
   
   # Out ----
   output$g_examenes_int <- renderGirafe({
@@ -1446,10 +2073,8 @@ shinyServer(function(input, output, session) {
   # Fallecidos region ----
   
   g_fallecidos_region <- reactive({
-    
-    
     p <- covid_fallecidos_region() %>%
-      filter(region == region_elegida()) %>%
+      filter(region == input$selector_region) %>%
       na.omit() %>%
       filter(fecha >= lubridate::ymd("2020-03-22")) %>%
       ggplot(aes(fecha, casos)) +
@@ -1494,11 +2119,11 @@ shinyServer(function(input, output, session) {
       theme(legend.position = "bottom") +
       labs(
         subtitle = paste(
-          ifelse(region_elegida() == "Metropolitana",
+          ifelse(input$selector_region == "Metropolitana",
                  paste("Región Metropolitana"),
-                 ifelse(region_elegida() == "Total",
+                 ifelse(input$selector_region == "Total",
                         paste("Datos a nivel nacional"),
-                        paste("Región de", region_elegida())
+                        paste("Región de", input$selector_region)
                  )
           ),
           "\nEntre el 22 de marzo y", format(max(covid_fallecidos_region()$fecha), "%d de %B")
@@ -1507,16 +2132,7 @@ shinyServer(function(input, output, session) {
         y = "Personas fallecidas por Covid-19"
       )
     p
-  })
-  #
-  
-  
-  
-  
-  
-  
-  
-  
+  }) %>% bindCache(Sys.Date, input$selector_region)
   
   
   # Out ----
@@ -1631,7 +2247,7 @@ shinyServer(function(input, output, session) {
         axis.text.y = element_text(margin = margin(l = 5, r = 3))
       )
     p
-  })
+  })  %>% bindCache(Sys.Date, input$selector_region, input$regiones_fallecidos_g_excl_rm)
   
   # Out ----
   output$fallecidos_region_int <- renderGirafe({
@@ -1781,7 +2397,7 @@ shinyServer(function(input, output, session) {
             axis.text.y = element_text(margin = margin(l = 5, r = 3))) +
       theme(legend.position = "none") +
       labs(subtitle = paste(
-        ifelse(region_elegida() == "Metropolitana",
+        ifelse(input$selector_region == "Metropolitana",
                paste("Región Metropolitana"),
                paste("Región de", region_g_comuna_elegida())),
         "\nCasos entre el", format(min(covid_comuna$fecha), "%d de %B"),
@@ -1984,11 +2600,11 @@ shinyServer(function(input, output, session) {
     )
   })
   
-  activos_comuna_region_elegida <- reactive({
-    req(input$selector_region_activos_comuna)
-    
-    input$selector_region_activos_comuna
-  })
+  # activos_comuna_region_elegida <- reactive({
+  #   req(input$selector_region_activos_comuna)
+  #   
+  #   input$selector_region_activos_comuna
+  # }) #ahora es input
   
   
   
@@ -1996,7 +2612,7 @@ shinyServer(function(input, output, session) {
   activos_comuna1 <- reactive({
     activos_comuna %>%
       select(-starts_with("codigo")) %>%
-      filter(region == activos_comuna_region_elegida()) %>%
+      filter(region == input$selector_region_activos_comuna) %>%
       droplevels()
   })
   
@@ -2276,7 +2892,7 @@ shinyServer(function(input, output, session) {
       ) +
       labs(
         subtitle = paste(
-          ifelse(region_elegida() == "Metropolitana",
+          ifelse(input$selector_region == "Metropolitana",
                  paste("Región Metropolitana"),
                  paste("Región de", as.character(region_g_comuna_tasa_elegida()))
           ),
@@ -2569,639 +3185,6 @@ shinyServer(function(input, output, session) {
     contentType = "application/xlsx"
   )
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  # — ----
-  
-  #Pestaña 1: GENERAL ----
-  
-  # Totales nacionales ----
-  
-  g_totales_nacionales <- reactive({
-    #req(covid_totales)
-    
-    p <- f_totales_nacionales() %>%
-      filter(categoria %in% c("activos", "activos probables", "nuevos totales", "nuevos sin notificar")) %>%
-      ungroup() %>%
-      mutate(categoria = recode(categoria, 
-                                "nuevos totales"="nuevos")) %>%
-      ggplot(aes(fecha, casos,
-                 col = forcats::fct_reorder(categoria, final),
-                 fill = forcats::fct_reorder(categoria, final))) +
-      geom_line(size = 2, alpha = 0.8) +
-      geom_point_interactive(aes(
-        tooltip = stringr::str_wrap(
-          paste0(stringr::str_to_sentence(categoria), ": ", casos, " casos",
-                 " al ", format(fecha, "%d de %B")
-          ), 40)), size = 1, alpha=0.1) +
-      geom_text_repel(aes(x = max(fecha), y = casos,
-                          label = ifelse(fecha == max(fecha),
-                                         as.character(paste0(stringr::str_to_sentence(categoria), ": ", 
-                                                             stringr::str_trim(format(casos, big.mark=".")))), "")),
-                      hjust = 0,
-                      nudge_x = 2,
-                      box.padding = unit(0, "points"),
-                      min.segment.length = unit(7, "points"),
-                      segment.alpha = 0.2, segment.size = 1.5,
-                      size = 5,
-                      family = "Open Sans",
-                      direction = "y") +
-      scale_y_continuous(labels = function(x) format(x, big.mark = ".")) +
-      scale_x_date(breaks = seq(from = min(covid_totales$fecha), to = max(covid_totales$fecha), 
-                                length.out = 15),
-                   date_labels = "%d/%B",
-                   expand = expansion(mult = c(0, 0.3))) +
-      #scale_color_manual_interactive(drop = TRUE, values = rev(degradado1(4))) +
-      scale_color_manual(drop=TRUE,
-                         values = c("#952AA5", "#7033CC", "#BA227E","#DF1A57",
-                                    "#952AA5", "#7033CC", "#DF1A57", "#BA227E")) +
-      #scales::show_col(c("#952AA5", "#7033CC", "#DF1A57", "#BA227E"))
-      theme(legend.position = "none") +
-      coord_cartesian(clip = "off") + # , ylim=c(0,900)) +
-      tema_lineas +
-      theme(axis.text.x = element_text(
-        angle = 45, vjust = 1, hjust = 1,
-        margin = margin(t = 0, b = 2))) +
-      ocultar_titulo_x +
-      labs(subtitle = paste("Casos entre el", format(min(covid_totales$fecha), "%d de %B del %Y"), "y el", format(max(covid_totales$fecha), "%d de %B del %Y")),
-           caption = "Mesa de datos Covid-19, casos totales nacionales diarios\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
-           y = "Cantidad de casos")
-    
-    p
-  })
-  
-  # Output ----
-  output$g_totales_nacionales_int <- renderGirafe({
-    girafe(
-      ggobj = g_totales_nacionales(),
-      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
-      height_svg = 9,
-      options = list(
-        opts_tooltip(use_fill = TRUE),
-        opts_hover(css = "r: 8px"),
-        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
-        opts_sizing(rescale = TRUE, width = .95),
-        opts_toolbar(position = "topright", saveaspng = FALSE)
-      )
-    )
-  })
-  
-  #Descarga
-  output$g_totales_nacionales_xlsx <- downloadHandler(
-    filename = "totales_nacionales_DataUC.xlsx",
-    content = function(filename) {
-      writexl::write_xlsx(f_totales_nacionales(), filename)
-    },
-    contentType = "application/xlsx"
-  )
-  
-  # Casos activos ----
-  
-  casos_activos_g <- reactive({
-    #req(covid_totales)
-    
-    p <- f_totales_nacionales() %>%
-      filter(categoria == "activos") %>% 
-      ggplot(aes(fecha, casos,
-                 col = forcats::fct_reorder(categoria, final),
-                 fill = forcats::fct_reorder(categoria, final))) +
-      geom_line(size = 2, alpha = 0.8) +
-      geom_point_interactive(aes(
-        tooltip = stringr::str_wrap(
-          paste0(stringr::str_to_sentence(categoria), ": ", format(casos, big.mark="."), " casos",
-                 " al ", format(fecha, "%d de %B")), 40)), 
-        size = 1, alpha = 0.1) +
-      # geom_text(aes(
-      #   label = ifelse(lubridate::day(fecha) %% 3 == 0,
-      #                  ifelse(fecha!=max(fecha), 
-      #                         casos,
-      #                         ""),
-      #                  "")),
-      #   col = "#DF1A57", size = 4,
-      #   family = "Open Sans",
-      #   hjust = 1, vjust = -1.4,
-      #   show.legend = FALSE) +
-      geom_text_repel(aes(x = max(fecha), y = casos,
-                          label = ifelse(fecha == max(fecha),
-                                         as.character(paste0(stringr::str_to_sentence(categoria), ": ", casos)), "")),
-                      hjust = 0, nudge_x = 2,
-                      box.padding = unit(0, "points"), min.segment.length = unit(7, "points"),
-                      segment.alpha = 0.2, segment.size = 1.5, size = 5,
-                      family = "Open Sans", direction = "y") +
-      scale_y_continuous(labels = function(x) format(x, big.mark = ".")) +
-      scale_x_date(breaks = seq(from = min(covid_totales$fecha), to = max(covid_totales$fecha), length.out = 10),
-                   date_labels = "%d/%B",
-                   expand = expansion(mult = c(0, 0.2))) +
-      scale_color_manual_interactive(drop = TRUE, values = degradado1(5)) +
-      theme(legend.position = "none") +
-      coord_cartesian(clip = "off") + # , ylim=c(0,900)) +
-      tema_lineas +
-      theme(axis.text.x = element_text(
-        angle = 45, vjust = 1, hjust = 1,
-        margin = margin(t = 0, b = 2)
-      )) +
-      ocultar_titulo_x +
-      labs(
-        subtitle = paste("Casos activos entre el", format(min(covid_totales$fecha), "%d de %B del %Y"), "y el", format(max(covid_totales$fecha), "%d de %B del %Y")),
-        caption = "Mesa de datos Covid-19, casos totales nacionales diarios\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
-        y = "Cantidad de casos activos"
-      )
-    
-    p
-  })
-  
-  
-  # Out ----
-  output$casos_activos_int <- renderGirafe({
-    girafe(
-      ggobj = casos_activos_g(),
-      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
-      height_svg = 6,
-      options = list(
-        opts_tooltip(use_fill = TRUE),
-        opts_hover(css = "r: 8px"),
-        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
-        opts_sizing(rescale = TRUE, width = .95),
-        opts_toolbar(position = "topright", saveaspng = FALSE)
-      )
-    )
-  })
-  
-  
-  # Descarga----
-  output$casos_activos_total_xlsx <- downloadHandler(
-    filename = "activos_totales_nacionales_DataUC.xlsx",
-    content = function(filename) {
-      writexl::write_xlsx(f_totales_nacionales() %>% filter(categoria == "activos"), filename)
-    },
-    contentType = "application/xlsx"
-  )
-  
-  
-  # Casos nuevos total ----
-  
-  g_total_nuevos <- reactive({
-    
-    covid_region_nuevos() %>%
-      filter(region == "Total") %>%
-      na.omit() %>%
-      filter(fecha >= lubridate::ymd("2020-03-22")) %>%
-      ggplot(aes(fecha, casos)) +
-      geom_line(size = 2, col = "#7033CC", alpha = 0.8) +
-      # geom_point(size=4, col="#DF1A57") +
-      geom_point_interactive(aes(
-        tooltip = stringr::str_wrap(
-          paste("El", format(fecha, "%d de %B"), "se reportaron", casos, 
-                "casos nuevos de Covid-19 con respecto al día anterior en el país"), 
-          40)), size = 1, alpha=0.1, col = "#7033CC") +
-      # geom_label(aes(
-      #   label = ifelse(casos > 0, paste0("+", casos, ""), "0"),
-      #   y = casos),
-      # label.padding = unit(2.2, "pt"), label.size = 0.4,
-      # family = "Open Sans", col = "#DF1A57",
-      # size = 4, hjust = 0.5, vjust = -1, show.legend = FALSE) +
-      scale_y_continuous(labels = function(x) format(x, big.mark = ".")) +
-      scale_x_date(breaks = seq(
-        from = lubridate::ymd("2020-03-22"), to = max(covid_region_nuevos()$fecha),
-        #by = 1
-        length.out=15),
-        # length.out=15),
-        expand = expansion(add = c(0, 0.6)),
-        date_labels = "%d/%B") +
-      scale_fill_manual(values = "#DF1A57") +
-      scale_y_continuous(labels = function(x) round(x, digits = 0)) +
-      coord_cartesian(clip = "off") +
-      tema_lineas +
-      ocultar_título_leyenda +
-      ocultar_titulo_x +
-      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1,
-                                       margin = margin(t = 5, b = 5)),
-            legend.text = element_text(margin = margin(r = 30))) +
-      theme(legend.position = "bottom") +
-      # labs(subtitle = paste("Entre el 22 de marzo y", format(max(covid_region$fecha), "%d de %B") ),
-      labs(
-        subtitle = paste("Datos a nivel nacional",
-                         "\nEntre el 22 de marzo y", format(max(covid_region_nuevos()$fecha), "%d de %B")
-        ),
-        caption = "Mesa de datos COVID-19, casos nuevos por región incremental\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
-        y = "Casos nuevos de Covid-19"
-      )
-  })
-  # Out ----
-  
-  output$g_total_nuevos_int <- renderGirafe({
-    girafe(
-      ggobj = g_total_nuevos(),
-      # width_svg = 16,
-      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
-      height_svg = 7,
-      options = list(
-        opts_tooltip(use_fill = TRUE),
-        opts_hover(css = "r: 8px"),
-        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
-        opts_sizing(rescale = TRUE, width = .95),
-        opts_toolbar(position = "topright", saveaspng = FALSE)
-      )
-    )
-  })
-  #Descarga
-  output$g_total_nuevos_xlsx <- downloadHandler(
-    filename = "reg_nuevos_DataUC.xlsx",
-    content = function(filename) {
-      writexl::write_xlsx(covid_region_nuevos() %>% filter(region=="Total"), filename)
-    },
-    contentType = "application/xlsx"
-  )
-  
-  # Casos por genero y grupo de edad ----
-  
-  casos_genero_edad_g <- reactive({ # grafico
-    p <- f_casos_genero_edad() %>%
-      ggplot(aes(fecha, casos,
-                 col = grupo_de_edad)) +
-      geom_line(size = 2) +
-      geom_text_repel(
-        aes(x = max(fecha),
-            y = casos,
-            label = ifelse(casos > 0,
-                           ifelse(
-                             fecha == max(fecha),
-                             as.character(paste0(" ", grupo_de_edad, ": ", format(casos, big.mark="."))), ""), "")),
-        hjust = -0.3, nudge_x = 0.5,
-        box.padding = unit(0, "points"),
-        min.segment.length = unit(8, "points"),
-        segment.alpha = 0.3,
-        size = 5, direction = "y") +
-      scale_y_continuous(labels = function(x) format(x, big.mark = ".")) +
-      scale_x_date(breaks = seq(
-        from = min(casos_genero_edad$fecha), to = max(casos_genero_edad$fecha),
-        #by = 2),
-        length.out=15),
-        expand = expansion(mult = c(0, 0.27)),
-        date_labels = "%d/%B") +
-      scale_color_manual(name = "edades", values = rev(degradado7(4)) ) +
-      coord_cartesian(clip = "off") +
-      facet_wrap(~sexo, ncol = 1) +
-      tema_lineas +
-      ocultar_titulo_x +
-      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1,
-                                       margin = margin(t = 0, b = 2)),
-            legend.text = element_text(margin = margin(r = 20)),
-            axis.text.y = element_text(margin = margin(l = 5, r = 5))) +
-      theme(legend.position = "none") +
-      labs(subtitle = paste(
-        "Casos entre el",
-        format(min(casos_genero_edad$fecha), "%d de %B"),
-        "y el",
-        format(max(casos_genero_edad$fecha), "%d de %B")
-      ),
-      caption = "Mesa de datos Covid-19, Casos por género y grupo de edad\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
-      y = "Casos según género y edad"
-      )
-    p
-  })
-  
-  # Out ----
-  output$casos_genero_edad_int <- renderGirafe({
-    girafe(
-      ggobj = casos_genero_edad_g(),
-      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
-      height_svg = 9,
-      options = list(
-        opts_tooltip(use_fill = TRUE),
-        opts_hover(css = "r: 8px"),
-        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
-        opts_sizing(rescale = TRUE, width = .95),
-        opts_toolbar(position = "topright", saveaspng = FALSE)
-      )
-    )
-  })
-  
-  #Descarga
-  output$casos_genero_edad_xlsx <- downloadHandler(
-    filename = "casos_genero_edad_DataUC.xlsx",
-    content = function(filename) {
-      writexl::write_xlsx(f_casos_genero_edad(), filename)
-    },
-    contentType = "application/xlsx"
-  )
-  
-  
-  # Fallecidos totales ----
-  
-  fallecidos_total_g <- reactive({
-    #req(covid_totales)
-    
-    p <- f_totales_nacionales() %>%
-      filter(categoria == "Fallecidos") %>% 
-      ggplot(aes(fecha, casos,
-                 col = forcats::fct_reorder(categoria, final),
-                 fill = forcats::fct_reorder(categoria, final))) +
-      geom_line(size = 2, alpha = 0.8, color= "#DF1A57") +
-      geom_point_interactive(aes(
-        tooltip = stringr::str_wrap(
-          paste0(stringr::str_to_sentence(categoria), ": ", casos, " casos", " al ", format(fecha, "%d de %B")
-          ), 40)), size = 1, alpha=0.1, color= "#DF1A57") +
-      geom_text_repel(aes(
-        x = max(fecha), y = casos,
-        label = ifelse(fecha == max(fecha),
-                       as.character(paste0(stringr::str_to_sentence(categoria), ": ", format(casos, big.mark="."))), "")),
-        hjust = 0, nudge_x = 2,
-        box.padding = unit(0, "points"),
-        min.segment.length = unit(7, "points"),
-        segment.alpha = 0.2, segment.size = 1.5,
-        size = 5,
-        family = "Open Sans", direction = "y") +
-      scale_y_continuous(labels = function(x) format(x, big.mark = ".")) +
-      scale_x_date(breaks = seq(from = min(covid_totales$fecha), to = max(covid_totales$fecha), length.out = 10),
-                   date_labels = "%d/%B",
-                   expand = expansion(mult = c(0, 0.25))) +
-      #scale_color_manual_interactive(drop = TRUE, values = degradado1(5)) +
-      theme(legend.position = "none") +
-      coord_cartesian(clip = "off") + # , ylim=c(0,900)) +
-      tema_lineas +
-      theme(axis.text.x = element_text(
-        angle = 45, vjust = 1, hjust = 1,
-        margin = margin(t = 0, b = 2)
-      )) +
-      ocultar_titulo_x +
-      labs(
-        subtitle = paste("Fallecimientos entre el", format(min(covid_totales$fecha), "%d de %B"), "y el", format(max(covid_totales$fecha), "%d de %B")),
-        caption = "Mesa de datos Covid-19, casos totales nacionales diarios\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
-        y = "Cantidad de personas fallecidas"
-      )
-    
-    p
-  })
-  
-  # Out ----
-  output$fallecidos_totales_int <- renderGirafe({
-    girafe(
-      ggobj = fallecidos_total_g(),
-      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
-      height_svg = 6,
-      options = list(
-        opts_tooltip(use_fill = TRUE),
-        opts_hover(css = "r: 8px"),
-        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
-        opts_sizing(rescale = TRUE, width = .95),
-        opts_toolbar(position = "topright", saveaspng = FALSE)
-      )
-    )
-  })
-  
-  #Descarga
-  output$g_fallecidos_total_xlsx <- downloadHandler(
-    filename = "fallecidos_totales_nacionales_DataUC.xlsx",
-    content = function(filename) {
-      writexl::write_xlsx(f_totales_nacionales() %>% filter(categoria == "Fallecidos"), filename)
-    },
-    contentType = "application/xlsx"
-  )
-  # Fallecidos por edad ----
-  
-  g_fallecidos <- reactive({
-    
-    p <- covid_fallecidos() %>%
-      mutate(edad = forcats::fct_relevel(grupo_de_edad, ">=90", after = Inf)) %>%
-      na.omit() %>%
-      ggplot(aes(fecha, casos, col = grupo_de_edad)) +
-      geom_line(size = 2, alpha = 0.8) +
-      geom_point_interactive(aes(
-        tooltip = stringr::str_wrap(
-          paste("Se reportaron", format(casos, big.mark="."), "personas fallecidas",
-                "con una edad de", edad, "producto de Covid-19",
-                "al", format(fecha, "%d de %B")), 40)), size = 1, alpha=0.1) +
-      # geom_text(aes(
-      #   label = ifelse(fecha != max(fecha), casos, ""), y = casos),
-      # size = 5, hjust = 0.5, vjust = -0.8,
-      # check_overlap = TRUE, show.legend = FALSE) +
-      geom_text_repel(aes(
-        x = max(fecha), y = casos,
-        label = ifelse(casos > 0,
-                       ifelse(fecha == max(fecha),
-                              as.character(paste0(grupo_de_edad, " años: ", format(casos, big.mark="."))), ""),"")),
-        hjust = -0.2, nudge_x = 0.2,
-        box.padding = unit(0, "points"),
-        min.segment.length = unit(8, "points"),
-        segment.alpha = 0.3,
-        size = 5, direction = "y") +
-      scale_y_continuous(labels = function(x) format(x, big.mark = ".")) +
-      scale_x_date(breaks = seq(from = lubridate::ymd("2020-04-09"), to = max(covid_fallecidos()$fecha), 
-                                #by = 1), 
-                                length.out=15),
-                   expand = expansion(mult = c(0, 0.27)),
-                   date_labels = "%d/%B") +
-      scale_color_manual(
-        name = "edades",
-        values = rev(degradado7(7))) +
-      coord_cartesian(clip = "off") +
-      tema_lineas +
-      ocultar_titulo_x +
-      theme(
-        axis.text.x = element_text(
-          angle = 45, vjust = 1, hjust = 1,
-          margin = margin(t = 0, b = 2)
-        ),
-        legend.text = element_text(margin = margin(r = 20)),
-        axis.text.y = element_text(margin = margin(l = 5, r = 5))
-      ) +
-      theme(legend.position = "none") +
-      labs(
-        subtitle = paste("Casos entre el 9 y", format(max(covid_fallecidos()$fecha), "%d de %B")),
-        caption = "Mesa de datos Covid-19, Fallecidos por grupo de edad\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
-        y = "Defunciones"
-      )
-    
-    p
-  })
-  
-  # Letalidad ----
-  
-  g_letalidad <- reactive({
-    p <- f_letalidad() %>%
-      ggplot(aes(fecha, Tasa)) +
-      geom_col_interactive(
-        fill = "#DF1A57", width = 0.6,
-        aes(tooltip = stringr::str_wrap(
-          paste("El día", format(fecha, "%d de %B"), "se registró una tasa de mortalidad de un",
-                scales::percent(Tasa, accuracy = 0.01),
-                "de personas fallecidas entre los", format(Activos, big.mark="."),
-                "casos totales"), 40))) +
-      scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-      scale_x_date(
-        breaks = seq(from = min(covid_totales$fecha), to = max(covid_totales$fecha), length.out = 10),
-        date_labels = "%d/%B") +
-      coord_cartesian(ylim = c(0, .1)) +
-      geom_text(aes(label = ifelse(Tasa != 0,
-                                   ifelse(lubridate::day(fecha) %% 5 == 0,
-                                          scales::percent(Tasa, accuracy = 0.01), ""),"")),
-                family = "Open Sans",
-                angle = 90, size = 4, vjust = 0.5, hjust = -0.2, col="gray50") +
-      labs( # title="Tasa de letalidad del Covid-19",
-        subtitle = paste("Nivel nacional\nÚltima actualización:", format(max(covid_totales$fecha), "%d de %B")),
-        caption = "Mesa de datos Covid-19, casos totales por región incremental\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
-        y = "Tasa de letalidad (proporción de\nfallecimientos entre los casos totales)"
-      ) +
-      tema_barras_label +
-      ocultar_titulo_x +
-      linea_gris_y +
-      theme(
-        axis.text.x = element_text(
-          size = 13, angle = 45, hjust = 1,
-          margin = margin(t = -5, b = -5)
-        ),
-        axis.text.y = element_text(margin = margin(r = 5)),
-        plot.caption = element_text(margin = margin(t = 10)),
-        legend.key.size = unit(1.2, "lines"),
-        plot.title.position = "plot"
-      )
-    p
-  })
-  
-  
-  # Hospitalizados ----
-  
-  g_hospitalizados <- reactive({
-    p <- f_hospitalizados() %>%
-      mutate(Orden = casos[fecha == max(fecha)]) %>%
-      ggplot(aes(fecha, casos,
-                 group = region,
-                 col = forcats::fct_reorder(region, Orden),
-                 col = forcats::fct_reorder(region, Orden))) +
-      geom_line_interactive(aes(
-        tooltip = stringr::str_wrap(
-          paste("Región de", region), 40)), size = 2, alpha=0.8) +
-      geom_text_repel(aes(
-        x = max(fecha), y = casos,
-        label = ifelse(casos > 0,
-                       ifelse(fecha == max(fecha),
-                              as.character(paste0(region, ": ", format(casos, big.mark="."))), ""),"")),
-        hjust = -0.2, nudge_x = 0.5,
-        box.padding = unit(0, "points"),
-        min.segment.length = unit(8, "points"),
-        segment.alpha = 0.3,
-        size = 5, direction = "y") +
-      scale_x_date(
-        breaks = seq(from = lubridate::ymd("2020-04-01"), to = max(covid_hospitalizados$fecha), length.out = 10),
-        date_labels = "%d/%B",
-        expand = expansion(mult = c(0, 0.26))) +
-      scale_color_manual(values = rev(degradado1(15))) +
-      scale_fill_manual(values = rev(degradado1(15))) +
-      theme(legend.position = "none") +
-      coord_cartesian(clip = "off") +
-      tema_lineas +
-      ocultar_titulo_x +
-      labs(subtitle = paste("Exceptuando Región Metropolitana\nCasos entre el 1 y", format(max(covid_hospitalizados$fecha), "%d de %B")),
-           caption = "Mesa de datos Covid-19, Pacientes en UCI por región\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
-           y = "Casos hospitalizados en camas UCI") +
-      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1,
-                                       margin = margin(l = 5, b = 5)),
-            axis.text.y = element_text(margin = margin(l = 5, r = 3)))
-    
-    p
-  })
-  
-  
-  
-  # Output hospitalizados ----
-  output$g_hospitalizados_int <- renderGirafe({
-    girafe(
-      ggobj = g_hospitalizados(),
-      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
-      height_svg = 10,
-      options = list(
-        opts_tooltip(use_fill = TRUE),
-        opts_hover(css = "r: 8px"),
-        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
-        opts_sizing(rescale = TRUE, width = .95),
-        opts_toolbar(position = "topright", saveaspng = FALSE)
-      )
-    )
-  })
-  
-  #Descarga
-  output$g_hospitalizados_xlsx <- downloadHandler(
-    filename = "hospitalizados_DataUC.xlsx",
-    content = function(filename) {
-      writexl::write_xlsx(f_hospitalizados(), filename)
-    },
-    contentType = "application/xlsx"
-  )
-  
-  # Output fallecidos ----
-  output$g_fallecidos_int <- renderGirafe({
-    girafe(
-      ggobj = g_fallecidos(),
-      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
-      height_svg = 7,
-      options = list(
-        opts_tooltip(use_fill = TRUE),
-        opts_hover(css = "r: 8px"),
-        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
-        opts_sizing(rescale = TRUE, width = .95),
-        opts_toolbar(position = "topright", saveaspng = FALSE)
-      )
-    )
-  })
-  
-  #Descarga
-  output$g_fallecidos_xlsx <- downloadHandler(
-    filename = "fallecidos_DataUC.xlsx",
-    content = function(filename) {
-      writexl::write_xlsx(covid_fallecidos() %>% na.omit(), filename)
-    },
-    contentType = "application/xlsx"
-  )
-  
-  # Output letalidad ----
-  output$g_letalidad_int <- renderGirafe({
-    girafe(
-      ggobj = g_letalidad(),
-      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
-      height_svg = 7,
-      options = list(
-        opts_tooltip(use_fill = TRUE),
-        opts_hover(css = "r: 8px"),
-        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
-        opts_sizing(rescale = TRUE, width = .95),
-        opts_toolbar(position = "topright", saveaspng = FALSE)
-      )
-    )
-  })
-  
-  #Descarga
-  output$g_letalidad_xlsx <- downloadHandler(
-    filename = "letalidad_DataUC.xlsx",
-    content = function(filename) {
-      writexl::write_xlsx(f_letalidad() %>% janitor::clean_names(), filename)
-    },
-    contentType = "application/xlsx"
-  )
-  
-  
-  # Output recuperados ----
-  output$g_recuperados_int <- renderGirafe({
-    girafe(
-      ggobj = g_recuperados(),
-      width_svg = ifelse(dimension_horizontal() < 800, 10, 12), # responsividad horizontal
-      height_svg = 7,
-      options = list(
-        opts_tooltip(use_fill = TRUE),
-        opts_hover(css = "r: 8px"),
-        opts_selection(css = "r: 8px; stroke:white; stroke-width:2pt;"),
-        opts_sizing(rescale = TRUE, width = .95),
-        opts_toolbar(position = "topright", saveaspng = FALSE)
-      )
-    )
-  })
   
   
   
@@ -3846,10 +3829,10 @@ shinyServer(function(input, output, session) {
   })
   
   # resultado de selector región
-  region_mapa_comuna_elegida <- reactive({ as.character(input$selector_region_mapa_comuna) })
+  #region_mapa_comuna_elegida <- reactive({ as.character(input$selector_region_mapa_comuna) })
   
   #resultado de cifra por graficar
-  valor_mapa_regiones <- reactive({ as.character(input$valor_mapa_regiones) })
+  #valor_mapa_regiones <- reactive({ as.character(input$valor_mapa_regiones) })
   
   
   
@@ -3857,16 +3840,16 @@ shinyServer(function(input, output, session) {
   mapa_activos_comuna_datos <-  reactive({
     
     comunas_casos <- activos_comuna %>%
-      filter(region == region_mapa_comuna_elegida() ) %>% #desde el selector
+      filter(region == input$selector_region_mapa_comuna ) %>% #desde el selector
       filter(fecha==max(fecha)) %>%
       select(codigo_comuna, poblacion, fecha, casos)
     
-    if(valor_mapa_regiones()=="tasa") {
+    if(input$valor_mapa_regiones=="tasa") {
       comunas_casos <- comunas_casos %>%
         mutate(casos = round((casos / poblacion) * 100000, digits = 1))
     }
     comunas_casos
-  })
+  }) %>% bindCache(Sys.Date(), input$selector_region_mapa_comuna, input$valor_mapa_regiones)
   
   
   
@@ -3888,7 +3871,7 @@ shinyServer(function(input, output, session) {
                           aes(tooltip = paste(nombre_comuna,
                                               "\n",
                                               casos,
-                                              ifelse(valor_mapa_regiones()=="casos",
+                                              ifelse(input$valor_mapa_regiones=="casos",
                                                      "casos activos\nal",
                                                      "casos activos por 100 mil habitantes\nal" ),
                                               format(fecha, "%d de %B")))) +
@@ -3902,11 +3885,11 @@ shinyServer(function(input, output, session) {
       theme(legend.position = "none",
             axis.text.x = element_blank(),
             axis.text.y = element_blank()) +
-      labs(subtitle = paste(ifelse(region_elegida() == "Metropolitana",
+      labs(subtitle = paste(ifelse(input$selector_region == "Metropolitana",
                                    paste("Región Metropolitana"),
-                                   ifelse(region_elegida() == "Total",
+                                   ifelse(input$selector_region == "Total",
                                           paste("Datos a nivel nacional"),
-                                          paste("Región de", region_elegida()) ) ),
+                                          paste("Región de", input$selector_region) ) ),
                             "\n", format(max(activos_comuna$fecha), "%d de %B") ),
            caption = "Mesa de datos COVID-19, casos activos por fecha de inicio de síntomas y comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
     
@@ -3935,7 +3918,7 @@ shinyServer(function(input, output, session) {
   #Mapa de Chile ----
   
   #resultado de cifra por graficar
-  valor_mapa_pais <- reactive({ as.character(input$valor_mapa_pais) })
+  #valor_mapa_pais <- reactive({ as.character(input$valor_mapa_pais) })
   
   mapa_activos_pais_datos <- reactive({
     region_a <- activos_comuna %>%
@@ -3948,7 +3931,7 @@ shinyServer(function(input, output, session) {
       select(-region) %>%
       filter(!is.na(codigo_region))
     
-    if(valor_mapa_pais()=="tasa") {
+    if(input$valor_mapa_pais=="tasa") {
       region_a <- region_a %>%
         mutate(casos = round((casos / poblacion) * 100000, digits = 1))
     }
@@ -3980,7 +3963,7 @@ shinyServer(function(input, output, session) {
                           aes(tooltip = paste(nombre_region,
                                               "\n",
                                               casos,
-                                              ifelse(valor_mapa_pais()=="casos",
+                                              ifelse(input$valor_mapa_pais=="casos",
                                                      "casos activos\nal",
                                                      "casos activos por cada 100 mil habitantes\nal" ),
                                               format(fecha, "%d de %B")))) +
@@ -3990,7 +3973,7 @@ shinyServer(function(input, output, session) {
                    nudge_x = -2) +
       #cifras
       geom_sf_text(aes(label = paste(casos, 
-                                     ifelse(valor_mapa_pais()=="casos",
+                                     ifelse(input$valor_mapa_pais=="casos",
                                             "casos activos",
                                             "casos activos por cada\n100 mil habitantes") )),
                    hjust=0,
