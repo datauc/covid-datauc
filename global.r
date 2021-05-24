@@ -13,6 +13,12 @@ Sys.setlocale(category = "LC_TIME", locale = "es_ES.UTF-8") # Meses en español
 options(scipen=9999)
 
 
+#funcion para la cache key en bindCache
+#para que marque true o false dependiendo de si es antes o despues de las 2PM (hora en que se actualiza el repositorio)
+fecha_ampm <- function() {
+    paste(lubridate::today(), lubridate::am(lubridate::today()-lubridate::hours(2))) 
+}
+
 
 # # Población de las regiones (Censo 2017) ----
 # 

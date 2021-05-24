@@ -14,18 +14,18 @@ shinyServer(function(input, output, session) {
   covid_totales <- reactive({
       d <- readr::read_csv("http://localhost:8080/totales_nacionales_diarios", col_types = readr::cols()) # 5
       return(d)
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   covid_region <- reactive({
       d <- readr::read_csv("http://localhost:8080/casos_totales_region_incremental", col_types = readr::cols()) %>% # 3
           mutate(region = forcats::fct_relevel(region, "Total", after = 0))
       return(d)
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   covid_comuna <- reactive({
       d <- readr::read_csv("http://localhost:8080/casos_totales_comuna_incremental", col_types = readr::cols()) # 1
       return(d)
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   covid_hospitalizados <- readr::read_csv("http://localhost:8080/pacientes_uci_region", col_types = readr::cols()) #8
   
@@ -35,17 +35,17 @@ shinyServer(function(input, output, session) {
   casos_totales_comuna <- reactive({
       d <- readr::read_csv("http://localhost:8080/casos_totales_comuna", col_types = readr::cols()) #2 
   return(d)
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   casos_activos_comuna <- reactive({
       d <- readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna", col_types = readr::cols()) #19
   return(d)
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   activos_comuna <- reactive({
       d <- readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna", col_types = readr::cols()) # 19
   return(d)
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   
   cat("Datos cargados", fill=T)
@@ -156,7 +156,7 @@ shinyServer(function(input, output, session) {
   nuevos_comuna <- reactive({
     nuevos_comuna <-
       readr::read_csv("http://localhost:8080/casos_nuevos_sintomas_comuna", col_types = readr::cols()) # 15
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   # Casos activos por fecha de inicio de síntomas y comuna
   # activos_comuna() <- reactive({
@@ -173,7 +173,7 @@ shinyServer(function(input, output, session) {
     # mutate(
     #   fecha = lubridate::ymd(fecha)
     # )
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   # Hospitalizados UCI ----
   
@@ -189,7 +189,7 @@ shinyServer(function(input, output, session) {
   hosp_integrado <- reactive({
     hosp_integrado <-
       readr::read_csv("http://localhost:8080/hospitalizacion_sistema_integrado", col_types = readr::cols()) # 24
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   # Fallecidos total ----
   
@@ -198,7 +198,7 @@ shinyServer(function(input, output, session) {
     # mutate(
     #   fecha = lubridate::ymd(fecha)
     # )
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   # Fallecidos por región ----
   
@@ -207,13 +207,13 @@ shinyServer(function(input, output, session) {
     # mutate(
     #   fecha = lubridate::ymd(fecha)
     # )
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   # # Fallecidos por región incremental
   # fallecidos_region <- reactive({
   #   fallecidos_region <-
   #     readr::read_csv("http://localhost:8080/fallecidos_region_incremental", col_types = readr::cols()) # 14
-  # }) %>% bindCache(Sys.Date())
+  # }) %>% bindCache(fecha_ampm())
   
   # Exámenes PCR ----
   
@@ -222,14 +222,14 @@ shinyServer(function(input, output, session) {
     # mutate(
     #   fecha = lubridate::ymd(fecha)
     # )
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   # Datos pacientes criticos ----
   pacientes_criticos <- reactive({
     pacientes_criticos <-
       readr::read_csv("http://localhost:8080/pacientes_criticos", col_types = readr::cols()) %>% # 23
       mutate(categoria = as.factor(categoria))
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   
   # Datos Hospitalizados totales por grupo de edad y género ----
@@ -241,20 +241,20 @@ shinyServer(function(input, output, session) {
         grupo_de_edad = as.factor(grupo_de_edad),
         categoria = as.factor(categoria)
       )
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   # Datos Hospitalizados UCI por grupo de edad ----
   hosp_edad_uci <- reactive({
     hosp_edad_uci <-
       readr::read_csv("http://localhost:8080/hospitalizados_grupo_edad", col_types = readr::cols()) %>% # 22
       filter(categoria == "Hospitalizados UCI")
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   # Datos Pacientes en UCI por grupo de edad ----
   uci_edad <- reactive({
     uci_edad <-
       readr::read_csv("http://localhost:8080/pacientes_uci_grupo_edad", col_types = readr::cols()) # 9
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   # # Datos Casos por genero y grupo de edad ----
   # casos_genero_edad <- reactive({
@@ -266,7 +266,7 @@ shinyServer(function(input, output, session) {
   # Datos ventiladores mecánicos a nivel nacional ----
   ventiladores <- reactive({
     readr::read_csv("http://localhost:8080/ventiladores_nacional", col_types = readr::cols()) # 20
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   # Totales nacionales ----
   
@@ -2425,7 +2425,7 @@ shinyServer(function(input, output, session) {
         caption = "Reporte diario Covid-19, Ministerio de Salud Mesa de datos Covid-19, casos totales por comuna incremental\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
         y = "Casos contagiados con Covid-19")
     p2
-  }) %>% bindCache(Sys.Date(), input$selector_region_g_comuna)
+  }) %>% bindCache(fecha_ampm(), input$selector_region_g_comuna)
   
   # Out ----
   output$grafico_comunas_int <- renderGirafe({
@@ -2728,7 +2728,7 @@ shinyServer(function(input, output, session) {
         y = "Casos y tasa de Covid-19"
       )
     p
-  }) %>% bindCache(Sys.Date(), input$selector_region_activos_comuna, input$selector_comuna_activos_comuna)
+  }) %>% bindCache(fecha_ampm(), input$selector_region_activos_comuna, input$selector_comuna_activos_comuna)
   
   # Out ----
   output$activos_comuna_int <- renderGirafe({
@@ -2815,7 +2815,7 @@ shinyServer(function(input, output, session) {
         y="Comunas",
         x="Semanas epidemiológicas",
         caption="Fuente: Mesa de datos COVID-19, Casos nuevos por fecha de inicio de síntomas por comuna\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación")
-  }) %>% bindCache(Sys.Date())
+  }) %>% bindCache(fecha_ampm())
   
   
   # Out ----
@@ -3855,7 +3855,7 @@ shinyServer(function(input, output, session) {
         mutate(casos = round((casos / poblacion) * 100000, digits = 1))
     }
     comunas_casos
-  }) %>% bindCache(Sys.Date(), input$selector_region_mapa_comuna, input$valor_mapa_regiones)
+  }) %>% bindCache(fecha_ampm(), input$selector_region_mapa_comuna, input$valor_mapa_regiones)
   
   
   
