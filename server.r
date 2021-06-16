@@ -14,18 +14,18 @@ shinyServer(function(input, output, session) {
   covid_totales <- reactive({
       d <- readr::read_csv("http://localhost:8080/totales_nacionales_diarios", col_types = readr::cols()) # 5
       return(d)
-  }) %>% bindCache(fecha_ampm())
+  }) #%>% bindCache(fecha_ampm())
   
   covid_region <- reactive({
       d <- readr::read_csv("http://localhost:8080/casos_totales_region_incremental", col_types = readr::cols()) %>% # 3
           mutate(region = forcats::fct_relevel(region, "Total", after = 0))
       return(d)
-  }) %>% bindCache(fecha_ampm())
+  }) #%>% bindCache(fecha_ampm())
   
   covid_comuna <- reactive({
       d <- readr::read_csv("http://localhost:8080/casos_totales_comuna_incremental", col_types = readr::cols()) # 1
       return(d)
-  }) %>% bindCache(fecha_ampm())
+  }) #%>% bindCache(fecha_ampm())
   
   covid_hospitalizados <- readr::read_csv("http://localhost:8080/pacientes_uci_region", col_types = readr::cols()) #8
   
@@ -35,17 +35,17 @@ shinyServer(function(input, output, session) {
   casos_totales_comuna <- reactive({
       d <- readr::read_csv("http://localhost:8080/casos_totales_comuna", col_types = readr::cols()) #2 
   return(d)
-  }) %>% bindCache(fecha_ampm())
+  }) #%>% bindCache(fecha_ampm())
   
   casos_activos_comuna <- reactive({
       d <- readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna", col_types = readr::cols()) #19
   return(d)
-  }) %>% bindCache(fecha_ampm())
+  }) #%>% bindCache(fecha_ampm())
   
   activos_comuna <- reactive({
       d <- readr::read_csv("http://localhost:8080/casos_activos_sintomas_comuna", col_types = readr::cols()) # 19
   return(d)
-  }) %>% bindCache(fecha_ampm())
+  }) #%>% bindCache(fecha_ampm())
   
   
   cat("Datos cargados", fill=T)
@@ -561,7 +561,7 @@ shinyServer(function(input, output, session) {
            y = "Cantidad de casos")
     
     p
-  }) %>% bindCache(Sys.Date)
+  }) #%>% bindCache(fecha_ampm())
   
   # Output ----
   output$g_totales_nacionales_int <- renderGirafe({
@@ -641,7 +641,7 @@ shinyServer(function(input, output, session) {
       )
     
     p
-  }) %>% bindCache(Sys.Date)
+  }) %>% bindCache(fecha_ampm())
   
   
   # Out ----
@@ -719,7 +719,7 @@ shinyServer(function(input, output, session) {
         caption = "Mesa de datos COVID-19, casos nuevos por región incremental\nMinisterio de Ciencia, Tecnología, Conocimiento e Innovación",
         y = "Casos nuevos de Covid-19"
       )
-  }) %>% bindCache(Sys.Date)
+  }) %>% bindCache(fecha_ampm())
   
   # Out ----
   
@@ -793,7 +793,7 @@ shinyServer(function(input, output, session) {
       y = "Casos según género y edad"
       )
     p
-  }) %>% bindCache(Sys.Date)
+  }) %>% bindCache(fecha_ampm())
   
   # Out ----
   output$casos_genero_edad_int <- renderGirafe({
@@ -866,7 +866,7 @@ shinyServer(function(input, output, session) {
       )
     
     p
-  }) %>% bindCache(Sys.Date)
+  }) %>% bindCache(fecha_ampm())
   
   # Out ----
   output$fallecidos_totales_int <- renderGirafe({
@@ -950,7 +950,7 @@ shinyServer(function(input, output, session) {
       )
     
     p
-  })  %>% bindCache(Sys.Date)
+  })  %>% bindCache(fecha_ampm())
   
   
   # Letalidad ----
@@ -994,7 +994,7 @@ shinyServer(function(input, output, session) {
         plot.title.position = "plot"
       )
     p
-  }) %>% bindCache(Sys.Date)
+  }) %>% bindCache(fecha_ampm())
   
   
   # Hospitalizados ----
@@ -1037,7 +1037,7 @@ shinyServer(function(input, output, session) {
             axis.text.y = element_text(margin = margin(l = 5, r = 3)))
     
     p
-  }) %>% bindCache(Sys.Date)
+  }) %>% bindCache(fecha_ampm())
   
   
   
@@ -1169,7 +1169,7 @@ shinyServer(function(input, output, session) {
           area(col = "Tasa") ~ color_tile("#f4e4f4", "#c8b1de")
         )
       )
-  }) %>% bindCache(Sys.Date)
+  }) %>% bindCache(fecha_ampm())
   
   output$t_casos_top_10_region <- renderFormattable({
     casos_top_10_region()
@@ -1247,7 +1247,7 @@ shinyServer(function(input, output, session) {
           area(col = "Tasa") ~ color_tile("#f4e4f4", "#c8b1de")
         )
       )
-  }) %>% bindCache(Sys.Date)
+  }) %>% bindCache(fecha_ampm())
   
   output$t_casos_top_comuna <- renderFormattable({
     casos_top_comuna()
@@ -1316,7 +1316,7 @@ shinyServer(function(input, output, session) {
           area(col = "Tasa") ~ color_tile("#f4e4f4", "#c8b1de")
         )
       )
-  }) %>% bindCache(Sys.Date)
+  }) %>% bindCache(fecha_ampm())
   
   output$tabla_nuevos_comuna <- renderFormattable({
     tabla_nuevos_comuna()
@@ -1506,7 +1506,7 @@ shinyServer(function(input, output, session) {
           #area(col = "Aumento") ~ color_tile("#eaf2fa", "#b0bee8")
         )
       )
-  }) %>% bindCache(Sys.Date)
+  }) %>% bindCache(fecha_ampm())
   
   output$tabla_casos_activos_comuna <- renderFormattable({
     tabla_casos_activos_comuna()
